@@ -128,12 +128,14 @@ def _vertical_lane(slide, left: int, top: int, width: int, height: int, label: s
     panel = _add_panel(slide, left, top, width, height, fill)
     panel.text = ""
 
+    label_length = height - 320000
+    label_height = 420000
     label_box = slide.shapes.add_shape(
         MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
-        Emu(left - 210000 + 80000),
-        Emu(top + (height // 2) - 210000),
-        Emu(height - 180000),
-        Emu(420000),
+        Emu(left - (label_length // 2) + 160000),
+        Emu(top + (height // 2) - (label_height // 2)),
+        Emu(label_length),
+        Emu(label_height),
     )
     label_box.fill.solid()
     label_box.fill.fore_color.rgb = Palette.lane_label_fill
@@ -148,7 +150,7 @@ def _vertical_lane(slide, left: int, top: int, width: int, height: int, label: s
     _set_text_style(label_paragraph, size=11, bold=True, color=Palette.lane_label_text, align=PP_ALIGN.CENTER)
     label_box.rotation = 270
 
-    content_box = slide.shapes.add_textbox(Emu(left + 520000), Emu(top + 120000), Emu(width - 640000), Emu(height - 240000))
+    content_box = slide.shapes.add_textbox(Emu(left + 380000), Emu(top + 120000), Emu(width - 500000), Emu(height - 240000))
     content_frame = content_box.text_frame
     content_frame.clear()
     content_frame.word_wrap = True
@@ -186,9 +188,9 @@ def _build_scope_slide(prs: Presentation, title: str, objective: str, regulators
     resources_shape = _add_panel(slide, 280000, 6060000, 11600000, 760000, Palette.resources_fill)
     _set_panel_text(resources_shape, "RECURSOS DE SUPORTE", _lines(resources), body_size=11)
 
-    start_shape = _add_panel(slide, 280000, 8440000 - 1860000, 5600000, 420000, Palette.event_fill)
+    start_shape = _add_panel(slide, 280000, 6600000, 5600000, 520000, Palette.event_fill)
     _set_panel_text(start_shape, "EVENTO DE INÍCIO", start_event, body_size=11)
-    end_shape = _add_panel(slide, 6280000, 8440000 - 1860000, 5600000, 420000, Palette.event_fill)
+    end_shape = _add_panel(slide, 6280000, 6600000, 5600000, 520000, Palette.event_fill)
     _set_panel_text(end_shape, "EVENTO DE FIM", end_event, body_size=11)
 
 

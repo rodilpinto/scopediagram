@@ -123,7 +123,7 @@ def _draw_panel(
     _draw_wrapped_text(
         draw,
         body or "N/A",
-        (left + 18, top + 44, right - 18, bottom - 14),
+        (left + 18, top + 44, right - 18, bottom - 6),
         font=body_font,
         fill=Palette.title,
     )
@@ -187,9 +187,9 @@ def _render_diagram(scope: ScopeDiagram, title: str, middle_label: str, middle_i
     _draw_vertical_lane(image, draw, (28, 384, 520, 742), fill=Palette.inputs_fill, label="ENTRADAS", items=inputs)
     _draw_vertical_lane(image, draw, (554, 384, 1046, 742), fill=Palette.activities_fill, label=middle_label, items=middle_items)
     _draw_vertical_lane(image, draw, (1080, 384, 1572, 742), fill=Palette.outputs_fill, label="SAÍDAS", items=outputs)
-    _draw_panel(draw, (28, 760, 1572, 832), fill=Palette.resources_fill, title="RECURSOS DE SUPORTE", body="\n".join(resources) or "N/A", body_font=SMALL_FONT)
-    _draw_panel(draw, (28, 846, 782, 888), fill=Palette.event_fill, title="EVENTO DE INÍCIO", body=start_event, body_font=SMALL_FONT)
-    _draw_panel(draw, (818, 846, 1572, 888), fill=Palette.event_fill, title="EVENTO DE FIM", body=end_event, body_font=SMALL_FONT)
+    _draw_panel(draw, (28, 748, 1572, 814), fill=Palette.resources_fill, title="RECURSOS DE SUPORTE", body="\n".join(resources) or "N/A", body_font=SMALL_FONT)
+    _draw_panel(draw, (28, 822, 782, 894), fill=Palette.event_fill, title="EVENTO DE INÍCIO", body=start_event, body_font=SMALL_FONT)
+    _draw_panel(draw, (818, 822, 1572, 894), fill=Palette.event_fill, title="EVENTO DE FIM", body=end_event, body_font=SMALL_FONT)
 
     output = BytesIO()
     image.convert("RGB").save(output, format="PNG")
