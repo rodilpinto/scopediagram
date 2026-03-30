@@ -7,8 +7,10 @@ Aplicação em Streamlit que extrai dados estruturados no modelo IGOE a partir d
 - `app.py`: interface Streamlit
 - `schema.py`: modelos Pydantic do processo e dos subprocessos
 - `llm.py`: integração com Gemini/OpenAI e extração estruturada
-- `renderer.py`: pré-visualização em Graphviz
+- `renderer.py`: geração da pré-visualização em PNG
 - `ppt.py`: composição dos slides em PowerPoint
+- `input_parser.py`: leitura de arquivos `.txt`, `.docx` e `.pdf`
+- `docs_content.py`: conteúdo da aba de documentação do aplicativo
 - `prompts/extraction.txt`: prompt de extração em JSON
 - `templates/ppt-layout-spec.md`: especificação visual derivada do PowerPoint de referência
 - `templates/reference-workflow.md`: instruções para manutenção do layout
@@ -47,10 +49,11 @@ GEMINI_MODEL = "gemini-2.5-flash"
 
 ## Comportamento atual
 
-- Aceita texto colado ou arquivo UTF-8
+- Aceita texto colado, arquivo e entrada estruturada
+- Lê arquivos `.txt`, `.md`, `.csv`, `.json`, `.docx` e `.pdf`
 - Extrai JSON estruturado com Gemini ou OpenAI
 - Valida contra o schema `ScopeDiagram`
-- Exibe uma prévia em Graphviz
+- Exibe uma prévia em PNG
 - Exporta um PowerPoint com:
   - capa
   - slide do processo principal
