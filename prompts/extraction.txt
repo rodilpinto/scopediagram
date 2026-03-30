@@ -1,0 +1,14 @@
+Extraia um diagrama de escopo estruturado usando o modelo IGOE.
+
+Regras:
+- Retorne APENAS JSON válido
+- Não inclua explicações
+- Não invente informações
+- Use frases curtas, em estilo objetivo
+- Preserve nomes técnicos, siglas, acentos e cedilhas quando existirem no texto
+
+Schema:
+{schema}
+
+Conteúdo:
+{input}

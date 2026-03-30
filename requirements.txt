@@ -1,0 +1,9 @@
+streamlit
+pydantic
+graphviz
+python-pptx
+openai
+google-genai
+python-docx
+pypdf
+pillow

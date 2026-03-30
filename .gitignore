@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.env
+.env.local
+.streamlit/secrets.toml
+output.pptx
+.DS_Store
+Thumbs.db
