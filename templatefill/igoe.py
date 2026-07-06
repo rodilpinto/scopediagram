@@ -262,14 +262,40 @@ def _fill_lanes(pkg: Package, slide_name: str, lanes: list[tuple[str, list[str]]
                 break
 
     # conteúdos: mapear por posição (esq/meio/dir)
+    content_tbs = []
     for idx, (_, sp, tb) in enumerate(content_shapes[:3]):
-        _replace_paragraph_list(tb, lanes[idx][1])
+        items = lanes[idx][1]
+        _replace_paragraph_list(tb, items)
+        content_tbs.append((tb, items))
+
+    _lane_font_fit(content_tbs)
 
     pkg.set_part(drawing, etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
 
     # sincronização best-effort do texto no modelo de dados (para editabilidade)
     if data and pkg.has_part(data):
         _sync_data_text(pkg, data, lanes)
+
+
+def _lane_font_fit(content_tbs: list[tuple[etree._Element, list[str]]]) -> None:
+    """Auto-fit por fonte: se a lane mais cheia exceder a capacidade da caixa,
+    reduz a fonte de TODAS as lanes uniformemente (mantém consistência)."""
+    CHARS_PER_LINE = 30   # ~30 chars por linha na largura da lane a 11pt
+    CAPACITY_LINES = 11   # ~11 linhas envolvidas cabem na altura da lane
+    BASE_SZ, MIN_SZ = 1100, 700
+
+    def lines_for(items: list[str]) -> int:
+        return sum(max(1, -(-len(it) // CHARS_PER_LINE)) for it in items) or 1
+
+    max_lines = max((lines_for(items) for _, items in content_tbs), default=1)
+    if max_lines <= CAPACITY_LINES:
+        return  # cabe na fonte padrão do template
+
+    sz = max(MIN_SZ, int(BASE_SZ * CAPACITY_LINES / max_lines))
+    for tb, _ in content_tbs:
+        for p in _paras(tb):
+            for r in _runs(p):
+                _set_run_size(r, sz)
 
 
 def _sync_data_text(pkg: Package, data_name: str, lanes: list[tuple[str, list[str]]]) -> None:
@@ -344,6 +370,12 @@ def fill_igoe_slide(
             for r in _runs(p):
                 if "EVENTO" in _text_of(r).upper() or _text_of(r).strip() in {"DE", "FIM", "INÍCIO"}:
                     _set_run_size(r, 1200)
+    # z-order: trazer as caixas EVENTO para a frente (evita que o cant_o inferior
+    # do contêiner verde cubra o topo das caixas laranja após o reflow).
+    sp_tree = root.find(f".//{_q(P, 'spTree')}")
+    for i in (5, 6, 8):
+        sp_tree.remove(shapes[i])
+        sp_tree.append(shapes[i])
 
     pkg.set_part(slide_name, etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
 
