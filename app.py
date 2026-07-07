@@ -301,27 +301,38 @@ with aba_gerador:
             st.caption("O resultado gerado permanece carregado enquanto você alterna entre subprocessos e downloads.")
 
         st.subheader("Pré-visualização")
-        previews = build_preview_images(generated_scope)
-        preview_options = [label for label, _ in previews]
-        if st.session_state.get("preview_selection") not in preview_options:
-            st.session_state["preview_selection"] = preview_options[0]
+        selected_preview = None
+        preview_label = "diagrama"
+        try:
+            previews = build_preview_images(generated_scope)
+            preview_options = [label for label, _ in previews]
+            if st.session_state.get("preview_selection") not in preview_options:
+                st.session_state["preview_selection"] = preview_options[0]
 
-        preview_label = st.selectbox(
-            "Selecione a visualização",
-            options=preview_options,
-            key="preview_selection",
-        )
-        selected_preview = next(image for label, image in previews if label == preview_label)
-        st.image(selected_preview, use_container_width=True)
+            preview_label = st.selectbox(
+                "Selecione a visualização",
+                options=preview_options,
+                key="preview_selection",
+            )
+            selected_preview = next(image for label, image in previews if label == preview_label)
+            st.image(selected_preview, use_container_width=True)
+            st.caption("Prévia aproximada (Graphviz). O PowerPoint para download reproduz o template real.")
+        except Exception as exc:  # ex.: Graphviz `dot` ausente — não deve bloquear o download
+            st.info(
+                "Prévia indisponível (o executável `dot` do Graphviz não foi encontrado). "
+                "Isso não afeta o PowerPoint abaixo, que é o entregável real."
+            )
+            st.caption(f"Detalhe técnico: {exc}")
 
         col_preview, col_ppt = st.columns(2)
         with col_preview:
-            st.download_button(
-                "Baixar PNG da pré-visualização",
-                data=selected_preview,
-                file_name=f"{preview_label.lower().replace(':', '').replace(' ', '_')}.png",
-                mime="image/png",
-            )
+            if selected_preview is not None:
+                st.download_button(
+                    "Baixar PNG da pré-visualização",
+                    data=selected_preview,
+                    file_name=f"{preview_label.lower().replace(':', '').replace(' ', '_')}.png",
+                    mime="image/png",
+                )
         with col_ppt:
             ppt_bytes = generate_ppt_bytes(generated_scope)
             st.download_button(
