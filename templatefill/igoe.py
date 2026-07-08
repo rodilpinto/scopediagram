@@ -379,8 +379,123 @@ def _find_lane_roots(
     return result
 
 
-def _rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, label, items):
-    raise NotImplementedError  # implementado na Task 2
+def _rebuild_lane_nodes(
+    work: etree._Element,
+    lane_root_pt: etree._Element,
+    shared_pres_id: str,
+    label: str,
+    items: list[str],
+) -> None:
+    """Reconstrói os nós de conteúdo de uma lane no modelo de dados do
+    SmartArt, replicando o padrão nativo (dgm:pt de conteúdo + parTrans +
+    sibTrans + cxn de hierarquia + cxn presOf). Mutator puro: só opera sobre
+    `work` (já em memória), nunca toca `pkg`. Levanta exceção em estrutura
+    inesperada — quem chama decide o que fazer (ver `_sync_data_nodes`).
+    `label` é o rótulo-alvo: para a lane do meio pode diferir do texto atual
+    de `lane_root_pt` (ex. "ATIVIDADES" -> "SUBPROCESSOS"); para
+    esquerda/direita já bate por construção (nenhum efeito)."""
+    items = [i for i in items if i and i.strip()] or ["—"]
+    root_id = lane_root_pt.get("modelId")
+
+    pt_lst = work.find(_q(DGM, "ptLst"))
+    cxn_lst = work.find(_q(DGM, "cxnLst"))
+
+    hier_cxns = [
+        c
+        for c in cxn_lst.findall(_q(DGM, "cxn"))
+        if c.get("type") is None and c.get("srcId") == root_id
+    ]
+    child_ids = {c.get("destId") for c in hier_cxns}
+    content_pts = [
+        p for p in pt_lst.findall(_q(DGM, "pt")) if p.get("modelId") in child_ids
+    ]
+    if not content_pts:
+        raise ValueError(f"lane {label!r}: nenhum filho de conteúdo para usar de molde")
+
+    template_run = None
+    for p in content_pts:
+        template_run = p.find(f".//{_q(A, 'r')}")
+        if template_run is not None:
+            break
+    if template_run is None:
+        raise ValueError(f"lane {label!r}: nenhum run de formatação para clonar")
+
+    trans_ids = set()
+    for c in hier_cxns:
+        trans_ids.add(c.get("parTransId"))
+        trans_ids.add(c.get("sibTransId"))
+    pres_of_cxns = [
+        c
+        for c in cxn_lst.findall(_q(DGM, "cxn"))
+        if c.get("type") == "presOf" and c.get("srcId") in child_ids
+    ]
+
+    for c in hier_cxns:
+        cxn_lst.remove(c)
+    for c in pres_of_cxns:
+        cxn_lst.remove(c)
+    for p in list(pt_lst.findall(_q(DGM, "pt"))):
+        mid = p.get("modelId")
+        if mid in child_ids or mid in trans_ids:
+            pt_lst.remove(p)
+
+    for k, text in enumerate(items):
+        content_id, par_id, sib_id, hier_id, pres_id = (
+            _new_guid(), _new_guid(), _new_guid(), _new_guid(), _new_guid()
+        )
+
+        content_pt = etree.SubElement(pt_lst, _q(DGM, "pt"))
+        content_pt.set("modelId", content_id)
+        pr = etree.SubElement(content_pt, _q(DGM, "prSet"))
+        pr.set("phldrT", "[Texto]")
+        pr.set("custT", "1")
+        t = etree.SubElement(content_pt, _q(DGM, "t"))
+        etree.SubElement(t, _q(A, "bodyPr"))
+        etree.SubElement(t, _q(A, "lstStyle"))
+        p_el = etree.SubElement(t, _q(A, "p"))
+        r_el = copy.deepcopy(template_run)
+        _set_run_text(r_el, text)
+        p_el.append(r_el)
+
+        for trans_type, trans_id in (("parTrans", par_id), ("sibTrans", sib_id)):
+            trans_pt = etree.SubElement(pt_lst, _q(DGM, "pt"))
+            trans_pt.set("modelId", trans_id)
+            trans_pt.set("type", trans_type)
+            trans_pt.set("cxnId", hier_id)
+            etree.SubElement(trans_pt, _q(DGM, "prSet"))
+            tt = etree.SubElement(trans_pt, _q(DGM, "t"))
+            etree.SubElement(tt, _q(A, "bodyPr"))
+            etree.SubElement(tt, _q(A, "lstStyle"))
+            pp = etree.SubElement(tt, _q(A, "p"))
+            etree.SubElement(pp, _q(A, "endParaRPr"))
+
+        hier_cxn = etree.SubElement(cxn_lst, _q(DGM, "cxn"))
+        hier_cxn.set("modelId", hier_id)
+        hier_cxn.set("srcId", root_id)
+        hier_cxn.set("destId", content_id)
+        hier_cxn.set("srcOrd", str(k))
+        hier_cxn.set("destOrd", "0")
+        hier_cxn.set("parTransId", par_id)
+        hier_cxn.set("sibTransId", sib_id)
+
+        pres_cxn = etree.SubElement(cxn_lst, _q(DGM, "cxn"))
+        pres_cxn.set("modelId", pres_id)
+        pres_cxn.set("type", "presOf")
+        pres_cxn.set("srcId", content_id)
+        pres_cxn.set("destId", shared_pres_id)
+        pres_cxn.set("srcOrd", "0")
+        pres_cxn.set("destOrd", str(k))
+        pres_cxn.set(
+            "presId", "urn:microsoft.com/office/officeart/2005/8/layout/hProcess7"
+        )
+
+    for p in lane_root_pt.iter(_q(A, "p")):
+        rs = p.findall(_q(A, "r"))
+        if rs:
+            _set_run_text(rs[0], label)
+            for extra in rs[1:]:
+                p.remove(extra)
+            break
 
 
 def _sync_data_nodes(pkg, data_name, lanes):

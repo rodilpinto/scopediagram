@@ -89,10 +89,116 @@ def test_find_lane_roots_missing_label_returns_none():
     assert _find_lane_roots(work, "ENTRADAS", "NAO EXISTE") is None
 
 
+def test_rebuild_lane_nodes_content_and_attrs():
+    work = _fresh_work()
+    (root_pt, shared), _, _ = _find_lane_roots(work, "ENTRADAS", "SAÍDAS")
+    items = ["item-a", "item-b", "item-c"]
+    _rebuild_lane_nodes(work, root_pt, shared, "ENTRADAS", items)
+
+    root_id = root_pt.get("modelId")
+    hier = [
+        c
+        for c in work.iter(_q(DGM, "cxn"))
+        if c.get("type") is None and c.get("srcId") == root_id
+    ]
+    assert len(hier) == 3
+    content_ids = {c.get("destId") for c in hier}
+    content_pts = [
+        p for p in work.iter(_q(DGM, "pt")) if p.get("modelId") in content_ids
+    ]
+    assert len(content_pts) == 3
+    assert {_text_of(p) for p in content_pts} == set(items)
+    for p in content_pts:
+        pr = p.find(_q(DGM, "prSet"))
+        assert pr.get("custT") == "1"
+        assert pr.get("phldrT") == "[Texto]"
+
+    pres = [
+        c
+        for c in work.iter(_q(DGM, "cxn"))
+        if c.get("type") == "presOf" and c.get("srcId") in content_ids
+    ]
+    assert len(pres) == 3
+    assert {c.get("destId") for c in pres} == {shared}
+
+    hier_by_dest = {c.get("destId"): int(c.get("srcOrd")) for c in hier}
+    pres_by_src = {c.get("srcId"): int(c.get("destOrd")) for c in pres}
+    assert hier_by_dest == pres_by_src
+    assert set(hier_by_dest.values()) == {0, 1, 2}
+    assert all(c.get("destOrd") == "0" for c in hier)
+    assert all(c.get("srcOrd") == "0" for c in pres)
+
+    trans_by_id = {
+        p.get("modelId"): p
+        for p in work.iter(_q(DGM, "pt"))
+        if p.get("type") in ("parTrans", "sibTrans")
+    }
+    for c in hier:
+        assert trans_by_id[c.get("parTransId")].get("cxnId") == c.get("modelId")
+        assert trans_by_id[c.get("sibTransId")].get("cxnId") == c.get("modelId")
+        assert c.get("destId") not in {"", None}
+
+
+def test_rebuild_lane_nodes_relabels_root():
+    work = _fresh_work()
+    _, (mid_pt, mid_shared), _ = _find_lane_roots(work, "ENTRADAS", "SAÍDAS")
+    assert _text_of(mid_pt).strip() == "ATIVIDADES"
+    _rebuild_lane_nodes(work, mid_pt, mid_shared, "SUBPROCESSOS", ["Sub 1", "Sub 2"])
+    assert _text_of(mid_pt).strip() == "SUBPROCESSOS"
+
+
+def test_rebuild_lane_nodes_preserves_root_presof_and_presparof():
+    work = _fresh_work()
+    (root_pt, shared), _, _ = _find_lane_roots(work, "ENTRADAS", "SAÍDAS")
+    root_id = root_pt.get("modelId")
+
+    def root_presof_dests():
+        return {
+            c.get("destId")
+            for c in work.iter(_q(DGM, "cxn"))
+            if c.get("type") == "presOf" and c.get("srcId") == root_id
+        }
+
+    def presparof_count():
+        return len(
+            [c for c in work.iter(_q(DGM, "cxn")) if c.get("type") == "presParOf"]
+        )
+
+    before_root_presof = root_presof_dests()
+    before_presparof = presparof_count()
+    assert len(before_root_presof) == 2  # confirmado na verificação da spec
+
+    _rebuild_lane_nodes(work, root_pt, shared, "ENTRADAS", ["x", "y", "z", "w"])
+
+    assert root_presof_dests() == before_root_presof
+    assert presparof_count() == before_presparof
+
+
+def test_rebuild_lane_nodes_single_item_fallback():
+    work = _fresh_work()
+    (root_pt, shared), _, _ = _find_lane_roots(work, "ENTRADAS", "SAÍDAS")
+    _rebuild_lane_nodes(work, root_pt, shared, "ENTRADAS", [])
+    root_id = root_pt.get("modelId")
+    content_ids = {
+        c.get("destId")
+        for c in work.iter(_q(DGM, "cxn"))
+        if c.get("type") is None and c.get("srcId") == root_id
+    }
+    content_pts = [
+        p for p in work.iter(_q(DGM, "pt")) if p.get("modelId") in content_ids
+    ]
+    assert len(content_pts) == 1
+    assert _text_of(content_pts[0]).strip() == "—"
+
+
 if __name__ == "__main__":
     test_new_guid_format()
     test_shared_pres_id_known_lanes()
     test_shared_pres_id_unknown_root_returns_none()
     test_find_lane_roots_subprocess_labels()
     test_find_lane_roots_missing_label_returns_none()
-    print("todos os testes passaram (task 1)")
+    test_rebuild_lane_nodes_content_and_attrs()
+    test_rebuild_lane_nodes_relabels_root()
+    test_rebuild_lane_nodes_preserves_root_presof_and_presparof()
+    test_rebuild_lane_nodes_single_item_fallback()
+    print("todos os testes passaram (task 2)")
