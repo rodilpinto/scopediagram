@@ -256,6 +256,78 @@ def test_rebuild_lane_nodes_propagates_exception_and_leaves_partial_state_to_cal
         igoe_mod._new_guid = real_guid
 
 
+def _package_with_data():
+    pkg = Package.open(str(TEMPLATE_PATH))
+    _drawing, data_name = _diagram_parts(pkg, IGOE_TEMPLATE)
+    return pkg, data_name
+
+
+def test_sync_data_nodes_happy_path_rewrites_all_lanes():
+    pkg, data_name = _package_with_data()
+    before = pkg.part(data_name)
+    lanes = [
+        ("ENTRADAS", ["in-1", "in-2"]),
+        ("SUBPROCESSOS", ["Sub 1", "Sub 2", "Sub 3"]),
+        ("SAÍDAS", ["out-1"]),
+    ]
+    _sync_data_nodes(pkg, data_name, lanes)
+    after = pkg.part(data_name)
+    assert after != before
+
+    root = etree.fromstring(after)
+    all_texts = {_text_of(p).strip() for p in root.iter(_q(DGM, "pt")) if not p.get("type")}
+    for label, items in lanes:
+        assert label in all_texts
+        for item in items:
+            assert item in all_texts
+
+
+def test_sync_data_nodes_precheck_failure_is_noop():
+    pkg, data_name = _package_with_data()
+    before = pkg.part(data_name)
+    lanes = [("NAO EXISTE", ["x"]), ("ATIVIDADES", ["y"]), ("SAÍDAS", ["z"])]
+    _sync_data_nodes(pkg, data_name, lanes)
+    assert pkg.part(data_name) == before
+
+
+def test_sync_data_nodes_missing_part_is_noop():
+    pkg, _data_name = _package_with_data()
+    lanes = [("ENTRADAS", ["x"]), ("ATIVIDADES", ["y"]), ("SAÍDAS", ["z"])]
+    _sync_data_nodes(pkg, "ppt/diagrams/data999.xml", lanes)  # não existe no pacote
+
+
+def test_sync_data_nodes_mid_lane_failure_aborts_whole_write():
+    pkg, data_name = _package_with_data()
+    before = pkg.part(data_name)
+
+    import templatefill.igoe as igoe_mod
+
+    real_rebuild = igoe_mod._rebuild_lane_nodes
+    calls = {"n": 0}
+
+    def flaky_rebuild(work, lane_root_pt, shared_pres_id, label, items):
+        calls["n"] += 1
+        if calls["n"] == 2:  # explode na 2a lane (do meio)
+            raise RuntimeError("boom no meio")
+        return real_rebuild(work, lane_root_pt, shared_pres_id, label, items)
+
+    igoe_mod._rebuild_lane_nodes = flaky_rebuild
+    try:
+        lanes = [
+            ("ENTRADAS", ["in-1"]),
+            ("ATIVIDADES", ["ativ-1"]),
+            ("SAÍDAS", ["out-1"]),
+        ]
+        _sync_data_nodes(pkg, data_name, lanes)
+    finally:
+        igoe_mod._rebuild_lane_nodes = real_rebuild
+
+    # 1a lane já tinha sido mutada em `work` (cópia) quando a 2a explodiu —
+    # mas `work` nunca foi gravado: `pkg.part(data_name)` deve continuar
+    # bit-a-bit idêntico ao estado anterior à chamada.
+    assert pkg.part(data_name) == before
+
+
 if __name__ == "__main__":
     test_new_guid_format()
     test_shared_pres_id_known_lanes()
@@ -268,4 +340,8 @@ if __name__ == "__main__":
     test_rebuild_lane_nodes_single_item_fallback()
     test_rebuild_lane_nodes_idempotent()
     test_rebuild_lane_nodes_propagates_exception_and_leaves_partial_state_to_caller()
-    print("todos os testes passaram (task 3)")
+    test_sync_data_nodes_happy_path_rewrites_all_lanes()
+    test_sync_data_nodes_precheck_failure_is_noop()
+    test_sync_data_nodes_missing_part_is_noop()
+    test_sync_data_nodes_mid_lane_failure_aborts_whole_write()
+    print("todos os testes passaram (task 4)")

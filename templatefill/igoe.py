@@ -498,8 +498,34 @@ def _rebuild_lane_nodes(
             break
 
 
-def _sync_data_nodes(pkg, data_name, lanes):
-    raise NotImplementedError  # implementado na Task 4
+def _sync_data_nodes(
+    pkg: Package, data_name: str, lanes: list[tuple[str, list[str]]]
+) -> None:
+    """Reconstrói os nós de conteúdo das 3 lanes no modelo de dados do
+    SmartArt (editabilidade pós-geração no PowerPoint). Isolamento
+    transacional: só grava (`pkg.set_part`) se as 3 lanes forem
+    reconstruídas sem exceção; qualquer falha (pré-checagem ou no meio da
+    reconstrução) deixa `data_name` 100% intocado."""
+    if not pkg.has_part(data_name):
+        return
+    root = etree.fromstring(pkg.part(data_name))
+    work = copy.deepcopy(root)
+
+    left_label, right_label = lanes[0][0], lanes[2][0]
+    found = _find_lane_roots(work, left_label, right_label)
+    if found is None:
+        return
+
+    try:
+        for (lane_root_pt, shared_pres_id), (label, items) in zip(found, lanes):
+            _rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, label, items)
+    except Exception:
+        return
+
+    pkg.set_part(
+        data_name,
+        etree.tostring(work, xml_declaration=True, encoding="UTF-8", standalone=True),
+    )
 
 
 def fill_igoe_slide(
