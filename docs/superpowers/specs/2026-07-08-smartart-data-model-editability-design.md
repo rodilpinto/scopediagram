@@ -144,23 +144,28 @@ torna o isolamento transacional (abaixo) implementável sem ambiguidade:
 
 **Camada 1 — orquestrador** `_sync_data_nodes(pkg, data_name, lanes)`, em
 `templatefill/igoe.py`, chamado **1x por slide** a partir de `_fill_lanes`
-(substituindo a chamada a `_sync_data_text`). Só ele toca `pkg`:
+(substituindo a chamada a `_sync_data_text`) — mesma assinatura de 3
+argumentos que `_sync_data_text` já tem hoje, sem precisar mudar o call site
+além de trocar o nome da função chamada. `left_label`/`right_label` são
+derivados de `lanes[0][0]`/`lanes[2][0]` (a ordem `[esquerda, meio, direita]`
+já é a mesma ordem em que `_fill_lanes` monta `lanes` hoje). Só ele toca `pkg`:
 
 ```
 def _sync_data_nodes(pkg, data_name, lanes):
-    # lanes = [(label, items), ...] já normalizado (ver "Normalização de entrada")
+    # lanes = [(left_label, left_items), (mid_label, mid_items), (right_label, right_items)]
     if not pkg.has_part(data_name):
         return
     root = etree.fromstring(pkg.part(data_name))
     work = copy.deepcopy(root)          # mutações acontecem só na cópia
 
+    left_label, right_label = lanes[0][0], lanes[2][0]
+    found = _find_lane_roots(work, left_label, right_label)  # 1x por slide — ver abaixo
+    if found is None:
+        return                          # pré-checagem falhou: no-op para as 3 lanes
+
     try:
-        for label, items in lanes:
-            found = _find_lane_root(work, label)   # por texto — ver abaixo
-            if found is None:
-                continue                # pré-checagem falhou: no-op só nesta lane
-            lane_root_pt, shared_pres_id = found
-            _rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, items)  # pode levantar
+        for (lane_root_pt, shared_pres_id), (label, items) in zip(found, lanes):
+            _rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, label, items)  # pode levantar
     except Exception:
         return                          # aborta a operação inteira: NÃO grava `work`
 
@@ -168,22 +173,34 @@ def _sync_data_nodes(pkg, data_name, lanes):
                                             encoding="UTF-8", standalone=True))
 ```
 
-- `_find_lane_root` (pré-checagem): retorna `None` sozinho — **nunca lança** —
-  é o único jeito de uma lane individual ficar de fora sem afetar as outras.
+- `_find_lane_roots` (pré-checagem, 1x por slide): retorna `None` sozinho —
+  **nunca lança** — se a contagem básica de 3 rótulos de lane não bater, ou
+  `left_label`/`right_label` não forem localizados, é no-op para a sincronia
+  de dados **inteira** do slide (as 3 lanes de uma vez — não há como confiar
+  em achar 2 de 3 com segurança se a estrutura básica já não bate).
 - `_rebuild_lane_nodes` (o mutator, camada 2): **pode lançar exceção** —
   qualquer erro no meio da reconstrução de uma lane propaga até o
   `try/except` do orquestrador, que descarta `work` inteiro e **não chama
   `pkg.set_part`** — a parte original (`pkg.part(data_name)`, o que já estava
   lá antes desta chamada) permanece intocada. Isso resolve a assimetria dos
-  dois modos de falha: pré-checagem malsucedida = *no-op só naquela lane*
-  (soft, via `continue`); exceção durante a reconstrução = *aborta a operação
-  inteira para o slide* (hard, via `except`) — nunca uma escrita parcial.
+  dois modos de falha: pré-checagem malsucedida = *no-op para todo o slide*
+  (soft, `_find_lane_roots is None`); exceção durante a reconstrução de
+  qualquer lane = *aborta a operação inteira para o slide* (hard, via
+  `except`) — nunca uma escrita parcial. (Nota: a versão anterior desta
+  seção descrevia a pré-checagem como "no-op só naquela lane" — corrigido
+  junto com a descoberta de IDs, ver nota na seção "Descoberta de IDs"; com
+  descoberta em lote de 1x por slide, o no-op de pré-checagem também passa a
+  ser em lote.)
 
-**Camada 2 — mutator puro** `_rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, items)`:
+**Camada 2 — mutator puro** `_rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, label, items)`:
 opera só sobre elementos `lxml` já em memória (o `work` da camada 1) — **não
 recebe `pkg` nem `data_name`, não faz parsing nem serialização**. Só muta a
 árvore e levanta exceção se algo inesperado acontecer (deixa a camada 1
-decidir o que fazer com isso). Passo a passo:
+decidir o que fazer com isso). `label` é o rótulo-alvo (necessário no passo 4
+— para a lane do meio, pode ser diferente do texto atual de `lane_root_pt`,
+ex. "ATIVIDADES" → "SUBPROCESSOS"; para esquerda/direita já bate por
+construção, então o passo 4 é um no-op inofensivo nesses casos). Passo a
+passo:
 
 1. **Capturar o molde de formatação** (`rPr` de um filho-molde de conteúdo
    atual de `lane_root_pt`) **antes** de remover qualquer coisa — depois de
@@ -212,44 +229,90 @@ decidir o que fazer com isso). Passo a passo:
 5. Retorna `None` (sucesso — muta `work` in-place) ou deixa a exceção propagar
    (a camada 1 decide o resto). **Não grava nada** — quem grava é a camada 1.
 
-**Normalização de entrada:** `_fill_lanes` normaliza `items` (`items or
-["—"]`, nunca lista vazia crua) **antes** de montar `lanes` e passar tanto
-para o preenchimento do desenho quanto para `_sync_data_nodes` — isso é
-**código novo** em `_fill_lanes` (hoje essa normalização só existe dentro de
-`_replace_paragraph_list`, usada só pelo desenho; `_fill_lanes` hoje passa
-`items` cru para `_sync_data_text`). Sem esse ponto único de normalização,
-desenho e modelo de dados podem divergir sobre "lane vazia".
+**Normalização de entrada:** em vez de centralizar em `_fill_lanes` (que
+exigiria mudar a construção de `lanes`, usada também pelo desenho),
+`_rebuild_lane_nodes` aplica **a mesma regra, no mesmo estilo**, já usada por
+`_replace_paragraph_list` (linha 113 de `igoe.py`) para o desenho: primeira
+linha da função, `items = [i for i in items if i and i.strip()] or ["—"]`.
+Cada consumidor normaliza a sua cópia de `items` de forma independente e
+idêntica — desenho e modelo de dados nunca divergem sobre "lane vazia" porque
+aplicam exatamente a mesma regra à mesma entrada, sem precisar de um ponto
+central. Mais simples que tocar em `_fill_lanes`, e consistente com o padrão
+já existente no código (`_replace_paragraph_list` já faz sua própria
+normalização, não recebe `items` pré-normalizado de fora).
 
-**Descoberta de IDs (`_find_lane_root`, por texto — não por posição/ordem de
-documento):** como o slide IGOE é clonado por subprocesso
-(`opc.py::clone_slide`), cada clone tem seu próprio `data*.xml` com
-`modelId`s idênticos aos do template original (clonagem copia bytes sem
-regenerar IDs — confirmado; sem risco de colisão entre clones porque cada
-`data*.xml` é uma parte separada e autocontida).
+**Descoberta de IDs (`_find_lane_roots`, por texto — não por posição/ordem de
+documento, e não por igualdade contra o rótulo ALVO):** como o slide IGOE é
+clonado por subprocesso (`opc.py::clone_slide`), cada clone tem seu próprio
+`data*.xml` com `modelId`s idênticos aos do template original (clonagem copia
+bytes sem regenerar IDs — confirmado; sem risco de colisão entre clones porque
+cada `data*.xml` é uma parte separada e autocontida).
 
 Importante: **o `data*.xml` não tem coordenadas geométricas** (ao contrário do
 `drawing*.xml`, que ordena por `off_x`). Mapear lane→posição por "ordem de
-documento" seria coincidência, não invariante garantida. `_find_lane_root(work,
-label)` casa por **igualdade de texto**: procura o `dgm:pt` cujo `dgm:t` é
-exatamente `label` (o `label` já resolvido pelo chamador — `left_label`/
-`mid_label`/`right_label` de `fill_igoe_slide`, que são literais fixos como
-`"ENTRADAS"`/`"SAÍDAS"` ou a variante de subprocesso); se encontrado, deriva
-`shared_pres_id` a partir do `presOf` de um filho de conteúdo atual (não dos 2
-`presOf` do próprio rótulo); retorna `(lane_root_pt, shared_pres_id)` ou
-`None` se qualquer uma dessas buscas falhar.
+documento" seria coincidência, não invariante garantida.
+
+**Correção de contradição encontrada ao escrever o plano de implementação
+(auto-revisão):** a versão anterior desta seção dizia para casar cada lane por
+igualdade de texto contra o rótulo **alvo** (`left_label`/`mid_label`/
+`right_label`, os parâmetros de `fill_igoe_slide`). Isso está **errado para a
+lane do meio no slide de processo**: `mid_label="SUBPROCESSOS"` nesse caso
+(`builder.py`), mas o modelo de dados **nunca é renomeado** — só o desenho é
+(`_fill_lanes`, "rótulos: mapear por posição", que sobrescreve o texto do
+shape do desenho independente do que ele dizia antes). O `data*.xml` do
+template sempre tem o texto original `"ATIVIDADES"` nesse nó, nunca
+`"SUBPROCESSOS"`. Casar por igualdade contra `mid_label="SUBPROCESSOS"`
+faria a busca falhar silenciosamente (cai no caminho de no-op) toda vez que o
+slide for de processo — justamente o caso mais comum. Corrigido: a descoberta
+usa **`left_label`/`right_label` (que são sempre literais estáveis,
+`"ENTRADAS"`/`"SAÍDAS"`, nunca renomeados em nenhum caso) para achar essas
+duas lanes por igualdade exata; a lane do meio é identificada **por
+eliminação** — o terceiro nó cujo texto está em `LANE_LABELS` mas não é
+nenhum dos dois já casados — exatamente como o código do desenho já faz
+(`_fill_lanes` também não casa a lane do meio pelo rótulo alvo; ordena as 3
+por posição e usa a posição do meio). `_find_lane_roots` retorna as 3 lanes de
+uma vez, nesta ordem fixa `[esquerda, meio, direita]`:
+
+```
+def _find_lane_roots(work, left_label, right_label):
+    candidates = [pt for pt in work.iter(_q(DGM, "pt"))
+                  if not pt.get("type") and _text_of(pt) in LANE_LABELS]
+    if len(candidates) != 3:
+        return None
+    left_pt = next((p for p in candidates if _text_of(p) == left_label), None)
+    right_pt = next((p for p in candidates if _text_of(p) == right_label), None)
+    if left_pt is None or right_pt is None or left_pt is right_pt:
+        return None
+    mid_pt = next(p for p in candidates if p is not left_pt and p is not right_pt)
+
+    result = []
+    for pt in (left_pt, mid_pt, right_pt):
+        shared = _shared_pres_id(work, pt.get("modelId"))  # via presOf de um filho atual
+        if shared is None:
+            return None
+        result.append((pt, shared))
+    return result   # [(left_pt, left_shared), (mid_pt, mid_shared), (right_pt, right_shared)]
+```
+
+O orquestrador (abaixo) chama `_find_lane_roots` **uma vez por slide** (não 3x
+por lane) e itera o resultado emparelhado posicionalmente com `lanes` (que já
+está em ordem `[esquerda, meio, direita]` — mesma ordem que `_fill_lanes`
+monta hoje). Se `_find_lane_roots` retornar `None` (candidatos != 3, ou
+left/right não localizados), é no-op para as **3 lanes de uma vez** — não dá
+para achar 2 de 3 com segurança se a contagem básica de 3 rótulos já não bate
+(sinal de template fora do formato esperado).
 
 ## Tratamento de erros
 
 Já concretizado na arquitetura acima (`_sync_data_nodes` / `_rebuild_lane_nodes`)
 — dois modos de falha distintos, deliberadamente assimétricos:
 
-- **Falha na pré-checagem** (`_find_lane_root` retorna `None` — nó-raiz da
-  lane ou `presOf` compartilhado não localizados no formato esperado, ex.:
-  template mudou de estrutura): **soft** — `continue` no orquestrador, no-op
-  **só nessa lane**, as outras 2 seguem normalmente. Render continua correto
-  via desenho; só a editabilidade dessa lane específica fica degradada
-  (igual ao comportamento best-effort de hoje). Geração nunca falha por causa
-  disso.
+- **Falha na pré-checagem** (`_find_lane_roots` retorna `None` — as 3 lanes
+  não foram localizadas no formato esperado, ex.: template mudou de
+  estrutura): **soft** — no-op para a sincronia de dados do slide **inteiro**
+  (as 3 lanes de uma vez). Render continua correto via desenho; só a
+  editabilidade desse slide fica degradada (igual ao comportamento
+  best-effort de hoje). Geração nunca falha por causa disso.
 - **Falha no meio da reconstrução** (`_rebuild_lane_nodes` lança exceção —
   achado grave da verificação, não coberto na primeira versão desta spec):
   **hard** — propaga até o `try/except` do orquestrador, que descarta `work`
