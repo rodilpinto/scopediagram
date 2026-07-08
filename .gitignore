@@ -6,3 +6,6 @@ __pycache__/
 output.pptx
 .DS_Store
 Thumbs.db
+
+# Decks de exemplo gerados (proposta, não validados)
+exemplo_*.pptx
