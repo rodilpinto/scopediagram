@@ -191,6 +191,71 @@ def test_rebuild_lane_nodes_single_item_fallback():
     assert _text_of(content_pts[0]).strip() == "—"
 
 
+def test_rebuild_lane_nodes_idempotent():
+    work = _fresh_work()
+    (root_pt, shared), _, _ = _find_lane_roots(work, "ENTRADAS", "SAÍDAS")
+    _rebuild_lane_nodes(work, root_pt, shared, "ENTRADAS", ["a", "b", "c", "d"])
+    _rebuild_lane_nodes(work, root_pt, shared, "ENTRADAS", ["x", "y"])
+
+    root_id = root_pt.get("modelId")
+    hier = [
+        c
+        for c in work.iter(_q(DGM, "cxn"))
+        if c.get("type") is None and c.get("srcId") == root_id
+    ]
+    assert len(hier) == 2
+    content_ids = {c.get("destId") for c in hier}
+    content_pts = [
+        p for p in work.iter(_q(DGM, "pt")) if p.get("modelId") in content_ids
+    ]
+    assert {_text_of(p) for p in content_pts} == {"x", "y"}
+
+    all_content_texts = {
+        _text_of(p).strip()
+        for p in work.iter(_q(DGM, "pt"))
+        if not p.get("type") and _text_of(p).strip() not in ("", "ENTRADAS")
+    }
+    assert "a" not in all_content_texts
+    assert "b" not in all_content_texts
+    assert "c" not in all_content_texts
+    assert "d" not in all_content_texts
+
+    # nenhum cxn/pt órfão referenciando modelIds que não existem mais
+    all_pt_ids = {p.get("modelId") for p in work.iter(_q(DGM, "pt"))}
+    for c in work.iter(_q(DGM, "cxn")):
+        for attr in ("srcId", "destId", "parTransId", "sibTransId"):
+            ref = c.get(attr)
+            if ref is not None:
+                assert ref in all_pt_ids, f"{attr}={ref} órfão após 2a chamada"
+
+
+def test_rebuild_lane_nodes_propagates_exception_and_leaves_partial_state_to_caller():
+    work = _fresh_work()
+    (root_pt, shared), _, _ = _find_lane_roots(work, "ENTRADAS", "SAÍDAS")
+
+    import templatefill.igoe as igoe_mod
+
+    calls = {"n": 0}
+    real_guid = igoe_mod._new_guid
+
+    def flaky_guid():
+        calls["n"] += 1
+        if calls["n"] > 7:  # falha no meio do 2o item (5 guids por item)
+            raise RuntimeError("boom")
+        return real_guid()
+
+    igoe_mod._new_guid = flaky_guid
+    try:
+        raised = False
+        try:
+            _rebuild_lane_nodes(work, root_pt, shared, "ENTRADAS", ["a", "b", "c"])
+        except RuntimeError:
+            raised = True
+        assert raised, "exceção esperada não foi levantada"
+    finally:
+        igoe_mod._new_guid = real_guid
+
+
 if __name__ == "__main__":
     test_new_guid_format()
     test_shared_pres_id_known_lanes()
@@ -201,4 +266,6 @@ if __name__ == "__main__":
     test_rebuild_lane_nodes_relabels_root()
     test_rebuild_lane_nodes_preserves_root_presof_and_presparof()
     test_rebuild_lane_nodes_single_item_fallback()
-    print("todos os testes passaram (task 2)")
+    test_rebuild_lane_nodes_idempotent()
+    test_rebuild_lane_nodes_propagates_exception_and_leaves_partial_state_to_caller()
+    print("todos os testes passaram (task 3)")
