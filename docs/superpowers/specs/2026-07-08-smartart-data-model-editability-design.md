@@ -2,8 +2,55 @@
 
 **Data:** 2026-07-08
 **Autor:** brainstorming assistido (Claude) + Rodrigo
-**Status:** aguardando revisão (verificação por subagentes independentes antes da implementação)
+**Status:** verificada por 3 subagentes independentes (2026-07-08) — achados incorporados abaixo
 **Resolve:** D3 em `docs/_DECISOES-PENDENTES.md` (decisão tomada: opção B — reconstruir nós do modelo de dados)
+
+## Verificação independente (2026-07-08)
+
+Três subagentes de contexto zerado revisaram esta spec de forma independente,
+cada um refazendo a investigação a partir do XML real (não confiando no texto
+da spec): (1) conferência byte-a-byte das afirmações estruturais contra
+`ppt/diagrams/data8.xml`, (2) viabilidade de implementação contra o código
+real (`templatefill/`), (3) revisão adversarial de casos-limite. **Nenhuma
+afirmação da seção "Achado técnico" foi contestada** — todas se confirmaram
+exatamente no XML real. Os três encontraram, juntos, 2 lacunas sérias e várias
+menores, todas já incorporadas nas seções abaixo:
+
+1. **(Grave) Falta isolamento transacional por lane.** Uma exceção no meio da
+   reconstrução de uma lane (depois de remover os filhos antigos, antes de
+   terminar os novos) podia deixar o XML gravado pela metade. Ver "Tratamento
+   de erros" abaixo.
+2. **(Grave) Atributo `cxnId` de retorno nos nós `parTrans`/`sibTrans`** não
+   estava documentado — sem ele, o XML fica inconsistente com o padrão nativo.
+   Ver "Estrutura repetível" abaixo.
+3. Lane vazia (`items=[]`) podia divergir do desenho (que sempre usa `"—"` de
+   fallback) se a função recebesse a lista crua. Ver "Normalização de entrada".
+4. Mapeamento de posição da lane (esquerda/meio/direita) **não pode** ser por
+   ordem de documento no `data*.xml` (não há coordenadas ali, ao contrário do
+   `drawing*.xml`) — precisa ser por igualdade de texto contra os rótulos fixos.
+   Ver "Descoberta de IDs".
+5. Trap de remoção: o próprio nó-raiz/rótulo da lane tem seus 2 `presOf`
+   próprios — remover ingenuamente por `srcId == lane_root_id` sem checar
+   `type` apagaria esses 2 também. Ver "Remoção segura".
+6. Faltava: `custT="1"` no `prSet` dos nós de conteúdo; sequenciar "capturar o
+   molde de formatação ANTES de remover os filhos antigos"; remoção por
+   conjunto de IDs (não `.find()` de primeira ocorrência) para garantir
+   idempotência; decisão explícita sobre logging (código hoje não tem nenhuma
+   infra de log). Todos incorporados abaixo.
+
+**Segunda rodada de verificação (2 subagentes novos, focados nas correções
+acima):** as 4 correções técnicas (cxnId, custT, troca srcOrd/destOrd, os 2
+presOf do rótulo) foram confirmadas byte-a-byte de novo, sem contestação. Mas
+a revisão de consistência do documento como um todo achou uma **lacuna
+arquitetural real**: a assinatura de função proposta, o "passo a passo por
+lane" e a seção de isolamento transacional descreviam **três papéis
+incompatíveis** para quem descobre os IDs, quem chama o quê, e quem grava o
+XML — sem isso resolvido, "isolamento transacional" não era implementável sem
+o implementador inventar a arquitetura sozinho. A seção "Abordagem escolhida"
+abaixo foi reescrita para fechar isso com uma divisão explícita
+orquestrador/mutator puro. Também faltava um teste cobrindo o risco #4
+(mapeamento por texto, não por ordem de documento) — adicionado na seção de
+testes.
 
 ## Problema
 
@@ -45,20 +92,42 @@ SmartArt "hProcess7":
 - SAÍDAS: 5 nós de conteúdo → `{AB3238E6-...}`
 
 **Estrutura repetível por item de lista** (confirmada via `dgm:ptLst` +
-`dgm:cxnLst`):
+`dgm:cxnLst`, byte-a-byte contra o XML real por subagente independente):
 
-1. Um `dgm:pt` de conteúdo — `modelId` próprio, `dgm:t` com o texto (parágrafo(s)
-   `a:p`/`a:r`, herdando `rPr` de um item-molde existente).
+1. Um `dgm:pt` de conteúdo — `modelId` próprio (GUID no formato
+   `{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}`, maiúsculo, com chaves — mesmo
+   estilo do template; `uuid.uuid4()` do Python gera minúsculo sem chaves,
+   precisa de formatação explícita). `dgm:prSet` com **`phldrT="[Texto]"
+   custT="1"`** (o `custT="1"` é o que marca "texto do usuário", presente em
+   todo nó de conteúdo real do template — ausente nos rótulos de lane).
+   `dgm:t` com o texto (parágrafo(s) `a:p`/`a:r`, herdando `rPr` de um
+   item-molde existente — **capturar esse molde ANTES de remover os filhos
+   antigos**, senão não sobra exemplo para clonar).
 2. Um `dgm:pt type="parTrans"` e um `dgm:pt type="sibTrans"` — nós de transição
-   vazios (`dgm:t` com só `endParaRPr`), exigidos pelo schema, referenciados por
-   `parTransId`/`sibTransId` no `cxn` de hierarquia (não aparecem em nenhum
-   `srcId`/`destId` diretamente).
+   vazios (`dgm:t` com só `endParaRPr`), exigidos pelo schema. **Cada um carrega
+   um atributo `cxnId`** que aponta de volta para o `modelId` do `dgm:cxn` de
+   hierarquia do item 3 (back-reference bidirecional: o cxn referencia os dois
+   via `parTransId`/`sibTransId`, e os dois referenciam o cxn via `cxnId`) —
+   verificado consistente nos 36 nós de transição do template real, 0
+   divergências. **Nenhum dos dois aparece como `srcId`/`destId` de qualquer
+   `cxn`** — só existem via essas referências cruzadas de atributo.
 3. Um `dgm:cxn` de hierarquia (sem atributo `type`, i.e. `parOf` implícito):
-   `srcId` = nó-raiz da lane, `destId` = novo nó de conteúdo, `srcOrd`/`destOrd`
-   = posição na lista, `parTransId`/`sibTransId` = os dois nós do item 2.
+   `modelId` próprio (usado como `cxnId` no item 2), `srcId` = nó-raiz da lane,
+   `destId` = novo nó de conteúdo, **`srcOrd`** = posição na lista (0..N-1,
+   escopado por lane — não colide entre lanes), `destOrd="0"` (fixo),
+   `parTransId`/`sibTransId` = os dois nós do item 2.
 4. Um `dgm:cxn type="presOf"`: `srcId` = novo nó de conteúdo, `destId` = objeto
    de apresentação **compartilhado** da lane (mesmo para todos os itens da
-   mesma lane), `ord` = posição, `presId` = `urn:microsoft.com/office/officeart/2005/8/layout/hProcess7`.
+   mesma lane), `srcOrd="0"` (fixo), **`destOrd`** = posição na lista (0..N-1 —
+   nota: é `destOrd` aqui, não `srcOrd`; os dois atributos de ordem trocam de
+   papel entre o cxn de hierarquia e o cxn `presOf` e precisam ficar
+   sincronizados manualmente pelo código, não há vínculo automático), `presId`
+   = `urn:microsoft.com/office/officeart/2005/8/layout/hProcess7`.
+
+**Não tocar:** a árvore `presParOf` (estrutura de apresentação fixa do layout,
+também dentro de `data*.xml`) é independente da contagem de itens — não
+referencia os `modelId`s de conteúdo que serão trocados. A nova função não deve
+mexer nela.
 
 Ou seja: a "lista variável dentro de uma lane" já é um padrão nativo do
 SmartArt, não uma view custom nossa — múltiplos nós de dados mapeando para o
@@ -70,67 +139,173 @@ já usa e valida.
 
 ## Abordagem escolhida
 
-Nova função em `templatefill/igoe.py`, substituindo `_sync_data_text`:
+Duas camadas, para separar "faz I/O" de "muta XML puro" — é essa separação que
+torna o isolamento transacional (abaixo) implementável sem ambiguidade:
+
+**Camada 1 — orquestrador** `_sync_data_nodes(pkg, data_name, lanes)`, em
+`templatefill/igoe.py`, chamado **1x por slide** a partir de `_fill_lanes`
+(substituindo a chamada a `_sync_data_text`). Só ele toca `pkg`:
 
 ```
-_rebuild_lane_data_nodes(pkg, data_name, lane_root_id, shared_pres_id, items, template_child_pt)
+def _sync_data_nodes(pkg, data_name, lanes):
+    # lanes = [(label, items), ...] já normalizado (ver "Normalização de entrada")
+    if not pkg.has_part(data_name):
+        return
+    root = etree.fromstring(pkg.part(data_name))
+    work = copy.deepcopy(root)          # mutações acontecem só na cópia
+
+    try:
+        for label, items in lanes:
+            found = _find_lane_root(work, label)   # por texto — ver abaixo
+            if found is None:
+                continue                # pré-checagem falhou: no-op só nesta lane
+            lane_root_pt, shared_pres_id = found
+            _rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, items)  # pode levantar
+    except Exception:
+        return                          # aborta a operação inteira: NÃO grava `work`
+
+    pkg.set_part(data_name, etree.tostring(work, xml_declaration=True,
+                                            encoding="UTF-8", standalone=True))
 ```
 
-Chamada 1x por lane (3x por slide) a partir de `_fill_lanes`, com os IDs
-descobertos dinamicamente (não hardcoded — ver "Descoberta de IDs" abaixo, o
-template varia por slide clonado).
+- `_find_lane_root` (pré-checagem): retorna `None` sozinho — **nunca lança** —
+  é o único jeito de uma lane individual ficar de fora sem afetar as outras.
+- `_rebuild_lane_nodes` (o mutator, camada 2): **pode lançar exceção** —
+  qualquer erro no meio da reconstrução de uma lane propaga até o
+  `try/except` do orquestrador, que descarta `work` inteiro e **não chama
+  `pkg.set_part`** — a parte original (`pkg.part(data_name)`, o que já estava
+  lá antes desta chamada) permanece intocada. Isso resolve a assimetria dos
+  dois modos de falha: pré-checagem malsucedida = *no-op só naquela lane*
+  (soft, via `continue`); exceção durante a reconstrução = *aborta a operação
+  inteira para o slide* (hard, via `except`) — nunca uma escrita parcial.
 
-Passo a passo por lane:
+**Camada 2 — mutator puro** `_rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, items)`:
+opera só sobre elementos `lxml` já em memória (o `work` da camada 1) — **não
+recebe `pkg` nem `data_name`, não faz parsing nem serialização**. Só muta a
+árvore e levanta exceção se algo inesperado acontecer (deixa a camada 1
+decidir o que fazer com isso). Passo a passo:
 
-1. **Localizar** o nó-raiz da lane no `data*.xml` pelo texto do rótulo (mesmo
-   critério já usado no desenho: comparar texto normalizado contra
-   `LANE_LABELS`), e o `presOf` que aponta para o objeto de apresentação
-   compartilhado dos filhos atuais dessa lane.
-2. **Remover** todos os nós-filho de conteúdo atuais da lane + seus
-   `parTrans`/`sibTrans` (via `parTransId`/`sibTransId` do cxn de hierarquia) +
-   as entradas de `cxnLst` (hierarquia e `presOf`) que os referenciam.
-3. **Para cada item novo:** clonar a formatação (`rPr`) do primeiro filho-molde
-   original (mesmo truque já usado em `_replace_paragraph_list` para os
-   parágrafos do desenho); gerar 3 `dgm:pt` novos (conteúdo + parTrans +
-   sibTrans, `modelId` via `uuid.uuid4()`) e 2 `dgm:cxn` novos (hierarquia +
-   `presOf`) com `ord` sequencial.
-4. **Atualizar o texto do próprio rótulo** da lane (nó-raiz) — comportamento já
+1. **Capturar o molde de formatação** (`rPr` de um filho-molde de conteúdo
+   atual de `lane_root_pt`) **antes** de remover qualquer coisa — depois de
+   removido não sobra exemplo para clonar.
+2. **Remoção segura, por conjunto de IDs coletados primeiro** (não por
+   `.find()` de primeira ocorrência — isso é o que garante idempotência: uma
+   segunda chamada não deixa nós órfãos):
+   - Coletar o conjunto de `modelId`s dos filhos de conteúdo atuais (via
+     `cxn` de hierarquia com `srcId == lane_root_pt.modelId` **e sem atributo
+     `type`** — este filtro por ausência de `type` é o que evita apagar os 2
+     `presOf` que o próprio `lane_root_pt` tem para si mesmo, que têm
+     `type="presOf"` e o mesmo `srcId` mas **não** devem ser tocados).
+   - A partir desse conjunto, coletar também os `parTransId`/`sibTransId`
+     referenciados (para remover os `parTrans`/`sibTrans` correspondentes) e
+     os `cxn type="presOf"` cujo `srcId` esteja no conjunto.
+   - Remover todos os `dgm:pt` e `dgm:cxn` desse conjunto fechado — nunca por
+     índice/posição, sempre por pertencimento ao conjunto.
+3. **Para cada item novo (0..N-1):** clonar a formatação capturada no passo 1;
+   gerar 3 `dgm:pt` novos (conteúdo com `custT="1"` + parTrans + sibTrans,
+   `modelId` via `uuid.uuid4()` formatado em maiúsculo com chaves) e 2
+   `dgm:cxn` novos (hierarquia com `srcOrd=k`/`destOrd="0"` + `presOf` com
+   `srcOrd="0"`/`destOrd=k`, ambos apontando para `shared_pres_id`) — ver
+   atributos exatos na seção "Achado técnico" acima.
+4. **Atualizar o texto do próprio rótulo** (`lane_root_pt`) — comportamento já
    existente, mantido.
-5. Serializar e gravar a parte de volta (`pkg.set_part`).
+5. Retorna `None` (sucesso — muta `work` in-place) ou deixa a exceção propagar
+   (a camada 1 decide o resto). **Não grava nada** — quem grava é a camada 1.
 
-**Descoberta de IDs (não hardcoded):** como o slide IGOE é clonado por
-subprocesso (`opc.py::clone_slide`), cada clone tem seu próprio `data*.xml` com
-`modelId`s únicos (GUIDs do template original, preservados na clonagem — a
-clonagem hoje copia bytes da parte sem regenerar IDs). O nó-raiz de cada lane é
-localizado por **texto do rótulo**, exatamente como já é feito para os shapes
-do desenho — não por ID fixo.
+**Normalização de entrada:** `_fill_lanes` normaliza `items` (`items or
+["—"]`, nunca lista vazia crua) **antes** de montar `lanes` e passar tanto
+para o preenchimento do desenho quanto para `_sync_data_nodes` — isso é
+**código novo** em `_fill_lanes` (hoje essa normalização só existe dentro de
+`_replace_paragraph_list`, usada só pelo desenho; `_fill_lanes` hoje passa
+`items` cru para `_sync_data_text`). Sem esse ponto único de normalização,
+desenho e modelo de dados podem divergir sobre "lane vazia".
+
+**Descoberta de IDs (`_find_lane_root`, por texto — não por posição/ordem de
+documento):** como o slide IGOE é clonado por subprocesso
+(`opc.py::clone_slide`), cada clone tem seu próprio `data*.xml` com
+`modelId`s idênticos aos do template original (clonagem copia bytes sem
+regenerar IDs — confirmado; sem risco de colisão entre clones porque cada
+`data*.xml` é uma parte separada e autocontida).
+
+Importante: **o `data*.xml` não tem coordenadas geométricas** (ao contrário do
+`drawing*.xml`, que ordena por `off_x`). Mapear lane→posição por "ordem de
+documento" seria coincidência, não invariante garantida. `_find_lane_root(work,
+label)` casa por **igualdade de texto**: procura o `dgm:pt` cujo `dgm:t` é
+exatamente `label` (o `label` já resolvido pelo chamador — `left_label`/
+`mid_label`/`right_label` de `fill_igoe_slide`, que são literais fixos como
+`"ENTRADAS"`/`"SAÍDAS"` ou a variante de subprocesso); se encontrado, deriva
+`shared_pres_id` a partir do `presOf` de um filho de conteúdo atual (não dos 2
+`presOf` do próprio rótulo); retorna `(lane_root_pt, shared_pres_id)` ou
+`None` se qualquer uma dessas buscas falhar.
 
 ## Tratamento de erros
 
-Mesma filosofia defensiva do código atual: se o nó-raiz da lane ou o `presOf`
-compartilhado não forem localizados no formato esperado (ex.: template mudou de
-estrutura), a função **não lança exceção** — registra e faz *no-op* nessa lane,
-deixando o modelo de dados como estava (o render continua correto via
-desenho, só a editabilidade fica degradada para essa lane específica, igual ao
-comportamento best-effort de hoje). Geração nunca falha por causa disso.
+Já concretizado na arquitetura acima (`_sync_data_nodes` / `_rebuild_lane_nodes`)
+— dois modos de falha distintos, deliberadamente assimétricos:
+
+- **Falha na pré-checagem** (`_find_lane_root` retorna `None` — nó-raiz da
+  lane ou `presOf` compartilhado não localizados no formato esperado, ex.:
+  template mudou de estrutura): **soft** — `continue` no orquestrador, no-op
+  **só nessa lane**, as outras 2 seguem normalmente. Render continua correto
+  via desenho; só a editabilidade dessa lane específica fica degradada
+  (igual ao comportamento best-effort de hoje). Geração nunca falha por causa
+  disso.
+- **Falha no meio da reconstrução** (`_rebuild_lane_nodes` lança exceção —
+  achado grave da verificação, não coberto na primeira versão desta spec):
+  **hard** — propaga até o `try/except` do orquestrador, que descarta `work`
+  **inteiro** e não chama `pkg.set_part`. O `data*.xml` original (de antes
+  desta chamada) permanece 100% intocado — nunca uma lane pela metade
+  removida/reconstruída gravada no arquivo final. Isso é o que evita
+  exatamente o `.pptx` corrompido que esta feature existe para prevenir.
+
+Sobre "registrar": o código de `templatefill/` **não tem nenhuma
+infraestrutura de logging hoje** (guard clauses silenciosas, sem `import
+logging`). Decisão explícita: manter esse padrão — os dois modos de falha
+acima são silenciosos, sem introduzir logging novo neste trabalho. Se
+rastreabilidade de quando isso acontece virar necessidade, é um item separado
+(não faz parte desta spec).
 
 ## Estratégia de testes
 
 1. **Estrutural (automatizado, roda sempre):** após gerar um deck de teste,
    parsear `data*.xml` de cada slide e verificar:
-   - contagem de `dgm:pt` de conteúdo por lane == número de itens injetados;
+   - contagem de `dgm:pt` de conteúdo por lane == número de itens injetados
+     (incluindo o caso de 1 item — fallback `"—"`);
    - todo `dgm:cxn` de hierarquia tem `parTransId`/`sibTransId` apontando para
-     `dgm:pt` existentes no mesmo `ptLst`;
+     `dgm:pt` existentes no mesmo `ptLst`, **e** os `dgm:pt` de transição
+     correspondentes têm `cxnId` apontando de volta para o `modelId` do cxn
+     (consistência bidirecional);
+   - todo nó de conteúdo tem `custT="1"` no `prSet`;
    - todo `dgm:cxn type="presOf"` de uma lane aponta para o **mesmo** `destId`
-     compartilhado, com `ord` 0..N-1 sem buracos nem repetição;
+     compartilhado, com `destOrd` 0..N-1 sem buracos nem repetição (e
+     `srcOrd`/`destOrd` do cxn de hierarquia correspondente sincronizados);
+   - os 2 `presOf` do próprio nó-raiz/rótulo da lane **sobrevivem intactos**
+     (não foram apagados pela remoção dos filhos);
+   - a árvore `presParOf` permanece inalterada antes/depois;
    - XML resultante é bem-formado e a parte abre sem erro.
-2. **Regressão:** testes de fumaça existentes (`tests/test_generation.py`)
+2. **Idempotência:** chamar `_sync_data_nodes` 2x seguidas sobre o mesmo slide
+   (mesmos itens ou itens diferentes) e verificar que não sobram `dgm:pt`/
+   `dgm:cxn` órfãos — só os nós da última chamada devem existir.
+3. **Falha parcial:** forçar uma exceção dentro de `_rebuild_lane_nodes` no
+   item N de uma lane com N+1 itens (mock/monkeypatch) e verificar que
+   `pkg.set_part` **não foi chamado** e que a parte `data*.xml` resultante é
+   **idêntica** (bytes) ao estado anterior à chamada de `_sync_data_nodes` —
+   nunca uma mistura de nós antigos/novos.
+4. **Mapeamento por texto, não por ordem de documento:** gerar um slide com
+   itens **distinguíveis por lane** (ex.: um marcador único tipo
+   `"ENTRADA-X"`/`"ATIVIDADE-Y"`/`"SAIDA-Z"` por lane) e confirmar que, no
+   `data*.xml` resultante, o texto que ficou sob o nó-raiz rotulado
+   "ENTRADAS" é de fato o item da lane esquerda — não um item de outra lane
+   que por coincidência ficasse na mesma posição de documento. Este teste
+   existe especificamente para o risco de "casar por ordem em vez de por
+   texto" identificado na verificação independente.
+5. **Regressão:** testes de fumaça existentes (`tests/test_generation.py`)
    continuam passando — geração não pode quebrar.
-3. **Render:** pipeline de QA visual (LibreOffice → PDF → PyMuPDF → PNG)
+6. **Render:** pipeline de QA visual (LibreOffice → PDF → PyMuPDF → PNG)
    confirma que o **desenho** (fonte de verdade do render) continua idêntico a
    antes — esta mudança não deve alterar nada visualmente, só o modelo de
    dados por trás.
-4. **Limite conhecido, não testável nesta máquina:** o teste real de
+7. **Limite conhecido, não testável nesta máquina:** o teste real de
    "abrir no PowerPoint de verdade, clicar num item do SmartArt, editar o
    texto, e o resultado continuar consistente" **não pode ser automatizado
    aqui** (sem PowerPoint instalado; LibreOffice não recalcula SmartArt a
@@ -155,6 +330,15 @@ comportamento best-effort de hoje). Geração nunca falha por causa disso.
   que o XML é **bem-formado e consistente com o padrão nativo observado**, mas
   não garante 100% que o PowerPoint vai aceitar sem ressalvas — só a abertura
   real no PowerPoint resolve essa dúvida.
-- Mitigação: tratamento de erro no-op (acima) garante que, na pior hipótese, o
-  resultado é idêntico ao comportamento atual (render correto, edição
-  degradada) — nunca pior do que hoje.
+- Mitigação: tratamento de erro no-op + isolamento transacional (acima)
+  garantem que, na pior hipótese, o resultado é idêntico ao comportamento
+  atual (render correto, edição degradada) — nunca pior do que hoje, e nunca
+  um arquivo corrompido.
+- **Achado tangencial (fora de escopo, não é uma ação deste trabalho):**
+  `data*.xml` tem um `extLst/dsp:dataModelExt relId="rId7"` que referencia um
+  relacionamento do **slide** (não da própria parte de dados), resolvido via
+  `_rels` daquele slide. Verificado que `opc.py::clone_slide` preserva os
+  valores de `Id` dos relacionamentos ao clonar (não renumera) — hoje esse
+  link não quebra. Registrado aqui só para o caso de uma mudança futura em
+  `clone_slide` que renumere `rId`s sem atualizar esse valor dentro de
+  `data*.xml` — não é algo a corrigir agora.
