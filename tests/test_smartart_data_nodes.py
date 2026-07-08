@@ -328,6 +328,86 @@ def test_sync_data_nodes_mid_lane_failure_aborts_whole_write():
     assert pkg.part(data_name) == before
 
 
+def _data_parts_by_slide(pkg_bytes: bytes) -> dict[str, bytes]:
+    """slide_name -> bytes do data*.xml correspondente, para todo slide que
+    tenha um diagrama SmartArt."""
+    out = {}
+    pkg = Package(pkg_bytes)
+    for slide_name in pkg.slide_names():
+        _drawing, data_name = _diagram_parts(pkg, slide_name)
+        if data_name:
+            out[slide_name] = pkg.part(data_name)
+    return out
+
+
+def test_full_pipeline_data_model_matches_content_process_and_subprocess():
+    from schema import GlobalElements, Process, ScopeDiagram, Subprocess
+    from templatefill.builder import generate_ppt_bytes
+
+    scope = ScopeDiagram(
+        process=Process(
+            name="Processo X",
+            objective="Objetivo do processo X.",
+            start_event="Início X",
+            end_event="Fim X",
+        ),
+        global_elements=GlobalElements(
+            inputs=["ENTRADA-MARCADOR-1", "ENTRADA-MARCADOR-2"],
+            outputs=["SAIDA-MARCADOR-1"],
+            regulators=["Norma Z"],
+            resources=["Recurso Z"],
+        ),
+        subprocesses=[
+            Subprocess(
+                name="Sub A",
+                objective="Objetivo A",
+                inputs=["ATIV-ENTRADA-A"],
+                activities=["ATIVIDADE-MARCADOR-A1", "ATIVIDADE-MARCADOR-A2"],
+                outputs=["ATIV-SAIDA-A"],
+                start_event="Início A",
+                end_event="Fim A",
+            )
+        ],
+    )
+    data = generate_ppt_bytes(scope, today="01/01/2026")
+    parts = _data_parts_by_slide(data)
+    assert len(parts) == 2  # slide de processo + 1 de subprocesso
+
+    all_texts_by_slide = {
+        slide: {
+            _text_of(p).strip()
+            for p in etree.fromstring(xml).iter(_q(DGM, "pt"))
+            if not p.get("type")
+        }
+        for slide, xml in parts.items()
+    }
+
+    # slide de processo: lane do meio SUBPROCESSOS com o nome do subprocesso;
+    # marcadores de entrada/saída globais nas lanes corretas
+    process_texts = next(
+        texts for texts in all_texts_by_slide.values()
+        if "SUBPROCESSOS" in texts
+    )
+    assert "Sub A" in process_texts
+    assert "ENTRADA-MARCADOR-1" in process_texts
+    assert "SAIDA-MARCADOR-1" in process_texts
+
+    # slide de subprocesso: lane do meio ATIVIDADES com as atividades do sub
+    sub_texts = next(
+        texts for texts in all_texts_by_slide.values()
+        if "ATIVIDADES" in texts
+    )
+    assert "ATIVIDADE-MARCADOR-A1" in sub_texts
+    assert "ATIVIDADE-MARCADOR-A2" in sub_texts
+    assert "ATIV-ENTRADA-A" in sub_texts
+    assert "ATIV-SAIDA-A" in sub_texts
+
+    # nenhum texto de exemplo do template original vazou
+    for texts in all_texts_by_slide.values():
+        assert "Objetivo geral da auditoria" not in texts
+        assert "Formalizar os trabalhos de auditoria" not in texts
+
+
 if __name__ == "__main__":
     test_new_guid_format()
     test_shared_pres_id_known_lanes()
@@ -344,4 +424,5 @@ if __name__ == "__main__":
     test_sync_data_nodes_precheck_failure_is_noop()
     test_sync_data_nodes_missing_part_is_noop()
     test_sync_data_nodes_mid_lane_failure_aborts_whole_write()
-    print("todos os testes passaram (task 4)")
+    test_full_pipeline_data_model_matches_content_process_and_subprocess()
+    print("todos os testes passaram (task 5)")

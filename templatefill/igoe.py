@@ -274,9 +274,9 @@ def _fill_lanes(pkg: Package, slide_name: str, lanes: list[tuple[str, list[str]]
 
     pkg.set_part(drawing, etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
 
-    # sincronização best-effort do texto no modelo de dados (para editabilidade)
+    # reconstrução do modelo de dados (para editabilidade pós-geração no PowerPoint)
     if data and pkg.has_part(data):
-        _sync_data_text(pkg, data, lanes)
+        _sync_data_nodes(pkg, data, lanes)
 
 
 def _lane_font_fit(content_tbs: list[tuple[etree._Element, list[str]]]) -> None:
@@ -298,25 +298,6 @@ def _lane_font_fit(content_tbs: list[tuple[etree._Element, list[str]]]) -> None:
         for p in _paras(tb):
             for r in _runs(p):
                 _set_run_size(r, sz)
-
-
-def _sync_data_text(pkg: Package, data_name: str, lanes: list[tuple[str, list[str]]]) -> None:
-    """Best-effort: substitui os textos de nós do modelo de dados pelos novos
-    itens, na ordem em que aparecem. Não recria a topologia de nós."""
-    root = etree.fromstring(pkg.part(data_name))
-    # Coletar todos os <a:t> em ordem de documento e os novos valores esperados
-    new_values = []
-    for label, items in lanes:
-        new_values.append(label)
-        new_values.extend(items)
-    ts = list(root.iter(_q(A, "t")))
-    # Só sincroniza se as contagens baterem razoavelmente; caso contrário, deixa
-    # o modelo como está (o render usa o desenho, que já foi corrigido).
-    text_ts = [t for t in ts if (t.text or "").strip()]
-    if len(text_ts) == len(new_values):
-        for t, val in zip(text_ts, new_values):
-            t.text = val
-        pkg.set_part(data_name, etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
 
 
 def _new_guid() -> str:
