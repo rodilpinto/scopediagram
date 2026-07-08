@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import re
+import uuid
 
 from lxml import etree
 
@@ -22,6 +23,7 @@ from .opc import Package, R_NS
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 P = "http://schemas.openxmlformats.org/presentationml/2006/main"
 DSP = "http://schemas.microsoft.com/office/drawing/2008/diagram"
+DGM = "http://schemas.openxmlformats.org/drawingml/2006/diagram"
 
 DIAGRAM_DRAWING_REL = "http://schemas.microsoft.com/office/2007/relationships/diagramDrawing"
 DIAGRAM_DATA_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData"
@@ -315,6 +317,74 @@ def _sync_data_text(pkg: Package, data_name: str, lanes: list[tuple[str, list[st
         for t, val in zip(text_ts, new_values):
             t.text = val
         pkg.set_part(data_name, etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
+
+
+def _new_guid() -> str:
+    """GUID no mesmo estilo do template (maiúsculo, com chaves)."""
+    return "{" + str(uuid.uuid4()).upper() + "}"
+
+
+def _shared_pres_id(work: etree._Element, root_id: str) -> str | None:
+    """ID do objeto de apresentação compartilhado pelos filhos de conteúdo
+    atuais de um nó-raiz de lane (via cxn de hierarquia + presOf)."""
+    child_ids = {
+        cxn.get("destId")
+        for cxn in work.iter(_q(DGM, "cxn"))
+        if cxn.get("type") is None and cxn.get("srcId") == root_id
+    }
+    if not child_ids:
+        return None
+    for cxn in work.iter(_q(DGM, "cxn")):
+        if cxn.get("type") == "presOf" and cxn.get("srcId") in child_ids:
+            return cxn.get("destId")
+    return None
+
+
+def _find_lane_roots(
+    work: etree._Element, left_label: str, right_label: str
+) -> list[tuple[etree._Element, str]] | None:
+    """Localiza as 3 lanes no modelo de dados por texto (nunca por posição/
+    ordem de documento — `data*.xml` não tem coordenadas). Esquerda/direita
+    por igualdade exata contra rótulos estáveis; a do meio por eliminação
+    (mesmo princípio que o desenho já usa: não casa a lane do meio pelo
+    rótulo-alvo, porque esse pode ter sido renomeado só no desenho, ex.
+    "SUBPROCESSOS" no slide de processo, enquanto o modelo de dados ainda diz
+    "ATIVIDADES"). Retorna `[(left_pt, left_shared), (mid_pt, mid_shared),
+    (right_pt, right_shared)]` ou `None` se a estrutura básica não bater."""
+    candidates = [
+        pt
+        for pt in work.iter(_q(DGM, "pt"))
+        if not pt.get("type") and _text_of(pt).strip().upper() in LANE_LABELS
+    ]
+    if len(candidates) != 3:
+        return None
+    left_pt = next(
+        (p for p in candidates if _text_of(p).strip().upper() == left_label.upper()),
+        None,
+    )
+    right_pt = next(
+        (p for p in candidates if _text_of(p).strip().upper() == right_label.upper()),
+        None,
+    )
+    if left_pt is None or right_pt is None or left_pt is right_pt:
+        return None
+    mid_pt = next(p for p in candidates if p is not left_pt and p is not right_pt)
+
+    result = []
+    for pt in (left_pt, mid_pt, right_pt):
+        shared = _shared_pres_id(work, pt.get("modelId"))
+        if shared is None:
+            return None
+        result.append((pt, shared))
+    return result
+
+
+def _rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, label, items):
+    raise NotImplementedError  # implementado na Task 2
+
+
+def _sync_data_nodes(pkg, data_name, lanes):
+    raise NotImplementedError  # implementado na Task 4
 
 
 def fill_igoe_slide(
