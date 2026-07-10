@@ -1,7 +1,7 @@
 ---
 title: PPTX generation — session onboarding / state snapshot
 maintained_by: Claude Code sessions; humans can edit too
-last_updated: 2026-07-07
+last_updated: 2026-07-09
 related: [_TODO.md, _DECISOES-PENDENTES.md, log.md]
 ---
 
@@ -9,50 +9,68 @@ related: [_TODO.md, _DECISOES-PENDENTES.md, log.md]
 
 Ponto de entrada único para qualquer sessão nova nesta área. ≤ 1 página; atualizado
 em cada pausa. Histórico em `log.md`; backlog em `_TODO.md`; decisões abertas em
-`_DECISOES-PENDENTES.md`. Snapshot completo em
-`~/.claude/projects/C--Users-P-8106-Documents-solucoes-scopediagram/memory/pptx_state_2026-07-07.md`.
+`_DECISOES-PENDENTES.md`.
 
 ## 1. O que é (30s)
 App Streamlit (`app.py`) que extrai um modelo IGOE de um texto via LLM (`llm.py` →
-`ScopeDiagram` em `schema.py`) e gera um PowerPoint de diagrama de escopo. **Esta
-sessão trocou a geração do PPTX**: em vez de desenhar formas do zero (`ppt_legacy.py`),
-agora **preenche o template real de referência** (que é SmartArt) — pacote `templatefill/`.
+`ScopeDiagram` em `schema.py`) e gera um PowerPoint de diagrama de escopo,
+**preenchendo o template real de referência (SmartArt)** — pacote `templatefill/`.
+Deploy: `main`, dois remotes (`github` e `origin`/git.camara.gov.br).
 
-## 2. Estado na última pausa (2026-07-07)
-### Feito & commitado (branch `feature/template-ppt-generation`)
-- `8bdaa34` — spec da abordagem (`docs/superpowers/specs/2026-07-02-...-design.md`).
-- `f2e55aa` — pacote `templatefill/` (opc.py, igoe.py, builder.py) + `ppt.py` vira shim + `ppt_legacy.py`.
-- `55d87ea` — auto-fit de fonte nas lanes + z-order das caixas de evento.
-- `2b912ea` — testes de fumaça (`tests/test_generation.py`) + `lxml` no requirements.
-- `5e9d1b7` — pré-visualização não-fatal (Graphviz `dot` opcional) em `app.py`.
+## 2. Estado na última pausa (2026-07-09)
+### Feito & commitado
+- **`main`**: geração por template (SmartArt) mergeada e em deploy (D1/D2 decididas
+  2026-07-08 — usuário testou ao vivo, funcionou; merge direto, push nos dois remotes).
+- **Branch `feature/smartart-data-model-editability`** (ainda não mergeada): D3
+  implementada — reconstrução do modelo de dados do SmartArt para editabilidade
+  pós-geração no PowerPoint. `_find_lane_roots` → `_rebuild_lane_nodes` →
+  `_sync_data_nodes` em `templatefill/igoe.py`, substituindo o antigo
+  `_sync_data_text` (best-effort, removido). 6 tasks TDD, cada uma implementada e
+  revisada por subagente independente (todas aprovadas); revisão final de branch
+  inteira (achado importante — `<dgm:spPr/>` faltante nos nós reconstruídos —
+  corrigido). Spec: `docs/superpowers/specs/2026-07-08-...-design.md`. Plano:
+  `docs/superpowers/plans/2026-07-08-...editability.md`.
 ### Working tree
-- Limpo, EXCETO `D .streamlit/secrets.toml.example` (deleção NÃO desta sessão — não staged; provavelmente do usuário ao criar o `secrets.toml` real).
-- Branch `feature/template-ppt-generation` **não** mergeada em `main`.
+- Limpo, EXCETO `D .streamlit/secrets.toml.example` (deleção não desta sessão,
+  ainda pendente de decisão — não tocado) e 2 arquivos `.pptx` do usuário não
+  rastreados (deixados intocados).
 ### Verificado (não assumido)
-- Deck LGPD de 5 slides renderiza limpo — 2 QA independentes por subagente, sem overflow/sobreposição.
-- Testes de fumaça passam; N variável de subprocessos funciona; auto-fit testado com 14 itens.
-- App subiu e respondeu HTTP 200 em http://localhost:8501; o server em background foi **encerrado** no limite de sessão. **Relançar:** `python -m streamlit run app.py --server.headless true --server.port 8501` (chave em `.streamlit/secrets.toml`).
+- Testes de fumaça (`tests/test_generation.py`) + testes novos
+  (`tests/test_smartart_data_nodes.py`, 15 testes) passam limpos.
+- QA visual (LibreOffice → PDF → PyMuPDF → PNG) num deck de 2 subprocessos: lanes
+  SUBPROCESSOS/ATIVIDADES corretas, sem overflow/sobreposição, sem vazamento de
+  texto do template — confirma que a mudança do D3 não afetou o render (só o
+  modelo de dados).
 ### Pendente / em aberto
-- **Usuário ia testar o app ao vivo** (extração por campo + qualidade do render). Relançar o app antes de retomar; aguardando o retorno do teste dele.
-- Bandas (REGULADORES/RECURSOS/OBJETIVO) **não** têm auto-fit — listas longas ali podem transbordar.
+- **Fechar a branch `feature/smartart-data-model-editability`** (finishing-a-development-branch:
+  merge/PR/manter — ainda não decidido nesta sessão).
+- **Validação manual do usuário**: abrir o `.pptx` gerado no PowerPoint de
+  verdade, editar um item de lane no SmartArt, confirmar que não reverte para
+  texto do template. Não testável nesta máquina (sem PowerPoint; LibreOffice não
+  recalcula SmartArt a partir do modelo de dados).
 
 ## 3. Achados críticos (não perder — custam tempo se redescobertos)
 - Template de referência é **SmartArt** (17 diagramas). `python-pptx` NÃO edita SmartArt de forma confiável → por isso o `templatefill/` mexe no XML direto (zip + lxml).
-- **LibreOffice NÃO regenera SmartArt** a partir do modelo de dados quando o desenho em cache é removido (render vira lixo). Logo o `drawingN.xml` em cache é obrigatório e é o que editamos. LibreOffice também NÃO "assa" SmartArt→formas no round-trip.
-- Cada lane = **1 `dsp:sp` com N parágrafos**; lista variável = editar parágrafos. Bandas/título/eventos = caixas de texto comuns do slide, ordem de shape estável 0–8 nos slides 15/18/21.
-- Caixas EVENTO transbordavam (âncora central + parágrafo vazio inicial); corrigido com strip de parágrafos vazios + âncora topo + crescer p/ cima + trazer p/ frente.
-- Novo gerador depende **só de lxml** (não de python-pptx). `ppt.py` reexporta `templatefill.builder.generate_ppt_bytes`, com fallback p/ `ppt_legacy`.
-- **Extração NÃO foi tocada** (`llm.py`, `prompts/extraction.txt`, `schema.py` intactos) → impossível haver regressão de extração por esta sessão.
-- QA visual: LibreOffice `C:\Program Files\LibreOffice\program\soffice.exe` → PDF → PyMuPDF (`fitz`) → PNG. poppler/`dot` NÃO instalados nesta máquina (bash); Read não renderiza PDF aqui.
+- **LibreOffice NÃO regenera SmartArt** a partir do modelo de dados quando o desenho em cache é removido (render vira lixo). Logo o `drawingN.xml` em cache é obrigatório.
+- Cada lane = **1 `dsp:sp` com N parágrafos** no desenho; no **modelo de dados**
+  (`data*.xml`), cada item de lista é um **nó `dgm:pt` próprio** (padrão nativo
+  `hProcess7`: conteúdo + `parTrans`/`sibTrans` + `cxn` de hierarquia + `cxn
+  presOf` compartilhado) — reconstruído por `_rebuild_lane_nodes` (D3).
+- Descoberta de lane no modelo de dados é **por texto** (nunca por ordem de
+  documento, que não existe ali) — esquerda/direita por igualdade exata,
+  meio por eliminação (a lane do meio pode ter rótulo-alvo "SUBPROCESSOS" no
+  slide de processo, mas o texto atual no modelo de dados ainda é "ATIVIDADES").
+- Novo gerador depende **só de lxml** (não de python-pptx).
+- **Extração NÃO foi tocada** (`llm.py`, `prompts/extraction.txt`, `schema.py` intactos).
+- QA visual: LibreOffice `C:\Program Files\LibreOffice\program\soffice.exe` → PDF → PyMuPDF (`fitz`) → PNG.
 
 ## 4. Disciplina de trabalho
 Um chunk = uma onda; carregue só o contexto necessário. Fecha o chunk: limpeza → verificar/render → atualizar durables → commit. `/onboard-pptx` retoma daqui.
 
 ## 5. Próximo movimento (recomendação, não decidido)
-1. **Ler o retorno do teste ao vivo do usuário** (traceback? campos certos? render limpo?) e corrigir o que aparecer.
-2. Se bandas transbordarem → estender auto-fit às bandas REGULADORES/RECURSOS/OBJETIVO.
-3. Considerar merge da branch em `main` (finishing-a-development-branch) + PR.
-4. Opcional: melhorar sync do modelo de dados do SmartArt (editabilidade pós-abertura).
+1. Rodar `superpowers:finishing-a-development-branch` para a branch
+   `feature/smartart-data-model-editability` (merge/PR/manter).
+2. Pedir ao usuário a validação manual no PowerPoint de verdade (item pendente acima).
 
 ## 6. Ponteiros (só caminhos — sem duplicar conteúdo)
 | Doc | Propósito |
@@ -60,7 +78,9 @@ Um chunk = uma onda; carregue só o contexto necessário. Fecha o chunk: limpeza
 | `_TODO.md` | ledger de tarefas |
 | `_DECISOES-PENDENTES.md` | decisões só-humano |
 | `log.md` | timeline append-only |
-| `docs/superpowers/specs/2026-07-02-template-based-ppt-generation-design.md` | spec da arquitetura |
+| `docs/superpowers/specs/2026-07-02-template-based-ppt-generation-design.md` | spec da arquitetura original (template-based) |
+| `docs/superpowers/specs/2026-07-08-smartart-data-model-editability-design.md` | spec da editabilidade do SmartArt (D3) |
+| `docs/superpowers/plans/2026-07-08-smartart-data-model-editability.md` | plano de implementação do D3 |
 | `templatefill/{opc,igoe,builder}.py` | motor OPC / preenchimento IGOE / orquestrador |
 
 ## 7. Como atualizar

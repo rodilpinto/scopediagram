@@ -1,7 +1,7 @@
 ---
 title: "Decisões abertas — ledger consolidado (PPTX)"
 maintained_by: Claude Code sessions; só Rodrigo resolve
-last_updated: 2026-07-07
+last_updated: 2026-07-09
 related: [_TODO.md, SESSION-ONBOARD-pptx.md, log.md]
 ---
 
@@ -11,63 +11,59 @@ related: [_TODO.md, SESSION-ONBOARD-pptx.md, log.md]
 > Sugestões aqui são propostas, não fatos validados.
 
 ## D1 — Resultado do teste ao vivo do app define os próximos ajustes
-- **Status:** 🔴 OPEN (aguardando o teste do usuário)
+- **Status:** 🟢 DECIDIDA (2026-07-08)
 - **Tipo:** validação / direção
 - **Onde aparece:** app em http://localhost:8501; PPTX baixado
 
-**A questão.** O usuário está testando o app com conteúdo real. O que ele reportar
-(campos extraídos corretos? algum overflow? traceback?) decide o próximo trabalho.
+**A questão.** O usuário testou o app com conteúdo real. O que ele reportasse
+(campos extraídos corretos? algum overflow? traceback?) decidiria o próximo trabalho.
 
-**Tarefas bloqueadas por D1:**
-- Estender (ou não) o auto-fit às bandas.
-- Qualquer correção de mapeamento de campo ou render.
-
-**Decisão tomada:** _(pendente)_
+**Decisão tomada:** ✅ Testou e funcionou bem — sem overflow, sem traceback reportado.
+Auto-fit das bandas não foi necessário (não houve relato de overflow nelas).
 
 ---
 
 ## D2 — Mergear a branch `feature/template-ppt-generation` em `main`?
-- **Status:** 🔴 OPEN
+- **Status:** 🟢 DECIDIDA (2026-07-08)
 - **Tipo:** git / release
 - **Onde aparece:** repositório; deploy no Streamlit Cloud
 
-**A questão.** A nova geração vive numa branch. Quando o usuário validar o app,
+**A questão.** A nova geração vivia numa branch. Quando o usuário validasse o app,
 mergear em `main` (a `main` é o que o Streamlit Cloud faz deploy).
 
-**Opções & trade-offs (📝 análise minha):**
-
-| Opção | Ganha | Perde / risco |
-|---|---|---|
-| A. Merge direto em `main` | simples; deploy imediato | sem revisão formal |
-| B. Abrir PR e revisar | rastreabilidade, code review | mais passos |
-
-**Recomendação (📝 sugestão):** B — abrir PR após o usuário validar o app ao vivo.
-
-**Tarefas bloqueadas por D2:** merge/PR no `_TODO.md` (P2).
-
-**Decisão tomada:** _(pendente)_
+**Decisão tomada:** ✅ Opção A — merge direto (o usuário optou por simplicidade em
+vez de PR, após validar o app ao vivo). Testes passaram antes e depois do merge.
+Push feito para os dois remotes configurados (`github` e `origin`/git.camara.gov.br).
 
 ---
 
 ## D3 — Precisamos de editabilidade fiel do SmartArt no PowerPoint?
-- **Status:** 🟡 EM ANÁLISE
+- **Status:** 🟢 DECIDIDA (2026-07-08) — implementada
 - **Tipo:** arquitetura
-- **Onde aparece:** `templatefill/igoe.py::_sync_data_text`
+- **Onde aparece:** `templatefill/igoe.py::_sync_data_nodes` / `_rebuild_lane_nodes` / `_find_lane_roots`
 
 **A questão.** O render usa o desenho em cache (correto). Mas o **modelo de dados**
-do SmartArt só é sincronizado best-effort. Se o usuário **editar** o SmartArt dentro
-do PowerPoint, o layout pode regenerar a partir do modelo de dados e reexibir texto
-do template. Vale investir em reconstruir o modelo de dados?
+do SmartArt só era sincronizado best-effort (`_sync_data_text`, removida). Se o
+usuário editasse o SmartArt dentro do PowerPoint, o layout podia regenerar a partir
+do modelo de dados desatualizado e reexibir texto do template.
 
-**Opções & trade-offs (📝 análise minha):**
-
-| Opção | Ganha | Perde / risco |
-|---|---|---|
-| A. Deixar como está (best-effort) | simples; deck abre perfeito | edição do SmartArt no PPT pode bagunçar |
-| B. Reconstruir nós do modelo de dados | editável e consistente | esforço alto, XML frágil |
-
-**Recomendação (📝 sugestão):** A, salvo o usuário exigir editar o SmartArt pós-entrega.
-
-**Tarefas bloqueadas por D3:** item P3 de sync no `_TODO.md`.
-
-**Decisão tomada:** _(pendente)_
+**Decisão tomada:** ✅ Opção B — reconstruir os nós do modelo de dados. Implementado
+e verificado:
+- Spec (`docs/superpowers/specs/2026-07-08-smartart-data-model-editability-design.md`)
+  verificada em 2 rodadas por subagentes independentes antes da implementação.
+- Implementação em 3 camadas: `_find_lane_roots` (descoberta por texto, nunca por
+  ordem de documento) → `_rebuild_lane_nodes` (mutator puro em memória, replica o
+  padrão nativo do SmartArt) → `_sync_data_nodes` (orquestrador transacional: só
+  grava se as 3 lanes reconstruírem sem exceção — nunca escreve XML pela metade).
+- 6 tasks TDD, cada uma implementada e revisada por subagentes independentes
+  (aprovadas), plano em `docs/superpowers/plans/2026-07-08-smartart-data-model-editability.md`.
+- Revisão final de branch inteira (Opus): pronta pra merge, com 1 achado importante
+  (faltava `<dgm:spPr/>` vazio nos nós reconstruídos — presente no template nativo,
+  opcional pelo schema mas corrigido por segurança) — corrigido e commitado.
+- QA visual (LibreOffice→PDF→PNG) confirma zero mudança no render (esta feature só
+  toca o modelo de dados).
+- **Limite conhecido, não coberto por esta decisão:** a validação real de "abrir no
+  PowerPoint de verdade, editar um item do SmartArt, e o resultado continuar
+  consistente" não pôde ser testada nesta máquina (sem PowerPoint instalado;
+  LibreOffice não recalcula SmartArt a partir do modelo de dados). Isso é do usuário
+  confirmar manualmente.
