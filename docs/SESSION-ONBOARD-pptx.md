@@ -1,7 +1,7 @@
 ---
 title: PPTX generation — session onboarding / state snapshot
 maintained_by: Claude Code sessions; humans can edit too
-last_updated: 2026-07-09
+last_updated: 2026-07-13
 related: [_TODO.md, _DECISOES-PENDENTES.md, log.md]
 ---
 
@@ -44,10 +44,20 @@ Deploy: `main`, dois remotes (`github` e `origin`/git.camara.gov.br).
 ### Pendente / em aberto
 - **Fechar a branch `feature/smartart-data-model-editability`** (finishing-a-development-branch:
   merge/PR/manter — ainda não decidido nesta sessão).
-- **Validação manual do usuário**: abrir o `.pptx` gerado no PowerPoint de
-  verdade, editar um item de lane no SmartArt, confirmar que não reverte para
-  texto do template. Não testável nesta máquina (sem PowerPoint; LibreOffice não
-  recalcula SmartArt a partir do modelo de dados).
+- ~~Validação manual do usuário no PowerPoint~~ — **feita em 2026-07-13**, ver §3.
+
+### Descoberta importante (2026-07-13)
+**PowerPoint está instalado nesta máquina** (Office 2013,
+`C:\Program Files (x86)\Microsoft Office\Office15\POWERPNT.EXE`) e `pywin32`
+está disponível. Isso corrige uma suposição errada que estava em vários docs
+("não testável nesta máquina, sem PowerPoint") — nunca havia sido verificado
+de fato. Consequência: dá pra automatizar QA visual e até edição real via COM,
+não só a aproximação do LibreOffice. Nova ferramenta:
+`tools/render_pptx_powerpoint.py` (exporta slides como PNG via PowerPoint
+real — usar para o loop verificar→corrigir→reverificar quando o render do
+LibreOffice for suspeito de divergir do real). Validação do D3 já feita com
+sucesso usando essa descoberta: editar um item de lane via COM + salvar
+preservou o resto do conteúdo, sem reverter pro template.
 
 ## 3. Achados críticos (não perder — custam tempo se redescobertos)
 - Template de referência é **SmartArt** (17 diagramas). `python-pptx` NÃO edita SmartArt de forma confiável → por isso o `templatefill/` mexe no XML direto (zip + lxml).
@@ -69,8 +79,10 @@ Um chunk = uma onda; carregue só o contexto necessário. Fecha o chunk: limpeza
 
 ## 5. Próximo movimento (recomendação, não decidido)
 1. Rodar `superpowers:finishing-a-development-branch` para a branch
-   `feature/smartart-data-model-editability` (merge/PR/manter).
-2. Pedir ao usuário a validação manual no PowerPoint de verdade (item pendente acima).
+   `feature/smartart-data-model-editability` (merge/PR/manter) — validação
+   real no PowerPoint já feita e passou, não é mais bloqueio.
+2. Decidir sobre `D .streamlit/secrets.toml.example` (deleção pendurada desde
+   a primeira sessão, nunca perguntada).
 
 ## 6. Ponteiros (só caminhos — sem duplicar conteúdo)
 | Doc | Propósito |
@@ -82,6 +94,7 @@ Um chunk = uma onda; carregue só o contexto necessário. Fecha o chunk: limpeza
 | `docs/superpowers/specs/2026-07-08-smartart-data-model-editability-design.md` | spec da editabilidade do SmartArt (D3) |
 | `docs/superpowers/plans/2026-07-08-smartart-data-model-editability.md` | plano de implementação do D3 |
 | `templatefill/{opc,igoe,builder}.py` | motor OPC / preenchimento IGOE / orquestrador |
+| `tools/render_pptx_powerpoint.py` | QA visual via PowerPoint real (COM) — export de slides pra PNG |
 
 ## 7. Como atualizar
 Ao mudar de estado: atualize §2/§5, bump `last_updated`, prepend em `log.md`, refresque o
