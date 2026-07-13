@@ -368,12 +368,23 @@ rastreabilidade de quando isso acontece virar necessidade, é um item separado
    confirma que o **desenho** (fonte de verdade do render) continua idêntico a
    antes — esta mudança não deve alterar nada visualmente, só o modelo de
    dados por trás.
-7. **Limite conhecido, não testável nesta máquina:** o teste real de
-   "abrir no PowerPoint de verdade, clicar num item do SmartArt, editar o
-   texto, e o resultado continuar consistente" **não pode ser automatizado
-   aqui** (sem PowerPoint instalado; LibreOffice não recalcula SmartArt a
-   partir do modelo de dados). Este passo de validação final **é do usuário**
-   — abrir o `.pptx` gerado no PowerPoint e confirmar manualmente.
+7. **Atualização (2026-07-13) — o "limite conhecido" abaixo estava errado.**
+   PowerPoint está instalado nesta máquina (Office 2013,
+   `C:\Program Files (x86)\Microsoft Office\Office15\POWERPNT.EXE`) e
+   `pywin32` está disponível — nunca havia sido verificado de fato, só
+   presumido. O teste real ("abrir no PowerPoint de verdade, editar um item
+   do SmartArt, o resto do conteúdo continuar consistente") **foi
+   automatizado via COM** e passou: editar um item de uma lane e salvar via
+   PowerPoint real preserva os demais itens injetados, sem reverter para
+   texto do template. Ferramenta de render via COM:
+   `tools/render_pptx_powerpoint.py` (exporta cada slide como PNG usando o
+   PowerPoint real, não uma aproximação).
+   ~~Limite conhecido, não testável nesta máquina: o teste real de "abrir no
+   PowerPoint de verdade, clicar num item do SmartArt, editar o texto, e o
+   resultado continuar consistente" não pode ser automatizado aqui (sem
+   PowerPoint instalado; LibreOffice não recalcula SmartArt a partir do
+   modelo de dados). Este passo de validação final é do usuário — abrir o
+   `.pptx` gerado no PowerPoint e confirmar manualmente.~~
 
 ## Fora de escopo (YAGNI)
 
@@ -387,12 +398,15 @@ rastreabilidade de quando isso acontece virar necessidade, é um item separado
 
 ## Riscos residuais
 
-- **Risco principal:** o comportamento real do motor de layout do PowerPoint
-  ao recalcular a partir do modelo de dados reconstruído não pode ser
-  verificado nesta máquina antes da entrega. A verificação estrutural garante
-  que o XML é **bem-formado e consistente com o padrão nativo observado**, mas
-  não garante 100% que o PowerPoint vai aceitar sem ressalvas — só a abertura
-  real no PowerPoint resolve essa dúvida.
+- **Risco principal — mitigado (2026-07-13):** o comportamento real do motor
+  de layout do PowerPoint ao recalcular a partir do modelo de dados
+  reconstruído foi verificado nesta máquina via automação COM (PowerPoint
+  real estava disponível, achado corrigido — ver item 7 do "Achado técnico").
+  Um edit real de item de lane + save preservou o resto do conteúdo sem
+  reverter para texto do template. Continua valendo abrir manualmente de vez
+  em quando para confirmar visualmente em casos futuros (ex. após mudanças
+  na estrutura do template), mas não é mais um limite bloqueante desta
+  máquina.
 - Mitigação: tratamento de erro no-op + isolamento transacional (acima)
   garantem que, na pior hipótese, o resultado é idêntico ao comportamento
   atual (render correto, edição degradada) — nunca pior do que hoje, e nunca

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import re
+import uuid
 
 from lxml import etree
 
@@ -22,6 +23,7 @@ from .opc import Package, R_NS
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 P = "http://schemas.openxmlformats.org/presentationml/2006/main"
 DSP = "http://schemas.microsoft.com/office/drawing/2008/diagram"
+DGM = "http://schemas.openxmlformats.org/drawingml/2006/diagram"
 
 DIAGRAM_DRAWING_REL = "http://schemas.microsoft.com/office/2007/relationships/diagramDrawing"
 DIAGRAM_DATA_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData"
@@ -272,9 +274,9 @@ def _fill_lanes(pkg: Package, slide_name: str, lanes: list[tuple[str, list[str]]
 
     pkg.set_part(drawing, etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
 
-    # sincronização best-effort do texto no modelo de dados (para editabilidade)
+    # reconstrução do modelo de dados (para editabilidade pós-geração no PowerPoint)
     if data and pkg.has_part(data):
-        _sync_data_text(pkg, data, lanes)
+        _sync_data_nodes(pkg, data, lanes)
 
 
 def _lane_font_fit(content_tbs: list[tuple[etree._Element, list[str]]]) -> None:
@@ -298,23 +300,215 @@ def _lane_font_fit(content_tbs: list[tuple[etree._Element, list[str]]]) -> None:
                 _set_run_size(r, sz)
 
 
-def _sync_data_text(pkg: Package, data_name: str, lanes: list[tuple[str, list[str]]]) -> None:
-    """Best-effort: substitui os textos de nós do modelo de dados pelos novos
-    itens, na ordem em que aparecem. Não recria a topologia de nós."""
+def _new_guid() -> str:
+    """GUID no mesmo estilo do template (maiúsculo, com chaves)."""
+    return "{" + str(uuid.uuid4()).upper() + "}"
+
+
+def _shared_pres_id(work: etree._Element, root_id: str) -> str | None:
+    """ID do objeto de apresentação compartilhado pelos filhos de conteúdo
+    atuais de um nó-raiz de lane (via cxn de hierarquia + presOf)."""
+    child_ids = {
+        cxn.get("destId")
+        for cxn in work.iter(_q(DGM, "cxn"))
+        if cxn.get("type") is None and cxn.get("srcId") == root_id
+    }
+    if not child_ids:
+        return None
+    for cxn in work.iter(_q(DGM, "cxn")):
+        if cxn.get("type") == "presOf" and cxn.get("srcId") in child_ids:
+            return cxn.get("destId")
+    return None
+
+
+def _find_lane_roots(
+    work: etree._Element, left_label: str, right_label: str
+) -> list[tuple[etree._Element, str]] | None:
+    """Localiza as 3 lanes no modelo de dados por texto (nunca por posição/
+    ordem de documento — `data*.xml` não tem coordenadas). Esquerda/direita
+    por igualdade exata contra rótulos estáveis; a do meio por eliminação
+    (mesmo princípio que o desenho já usa: não casa a lane do meio pelo
+    rótulo-alvo, porque esse pode ter sido renomeado só no desenho, ex.
+    "SUBPROCESSOS" no slide de processo, enquanto o modelo de dados ainda diz
+    "ATIVIDADES"). Retorna `[(left_pt, left_shared), (mid_pt, mid_shared),
+    (right_pt, right_shared)]` ou `None` se a estrutura básica não bater."""
+    candidates = [
+        pt
+        for pt in work.iter(_q(DGM, "pt"))
+        if not pt.get("type") and _text_of(pt).strip().upper() in LANE_LABELS
+    ]
+    if len(candidates) != 3:
+        return None
+    left_pt = next(
+        (p for p in candidates if _text_of(p).strip().upper() == left_label.upper()),
+        None,
+    )
+    right_pt = next(
+        (p for p in candidates if _text_of(p).strip().upper() == right_label.upper()),
+        None,
+    )
+    if left_pt is None or right_pt is None or left_pt is right_pt:
+        return None
+    mid_pt = next(p for p in candidates if p is not left_pt and p is not right_pt)
+
+    result = []
+    for pt in (left_pt, mid_pt, right_pt):
+        shared = _shared_pres_id(work, pt.get("modelId"))
+        if shared is None:
+            return None
+        result.append((pt, shared))
+    return result
+
+
+def _rebuild_lane_nodes(
+    work: etree._Element,
+    lane_root_pt: etree._Element,
+    shared_pres_id: str,
+    label: str,
+    items: list[str],
+) -> None:
+    """Reconstrói os nós de conteúdo de uma lane no modelo de dados do
+    SmartArt, replicando o padrão nativo (dgm:pt de conteúdo + parTrans +
+    sibTrans + cxn de hierarquia + cxn presOf). Mutator puro: só opera sobre
+    `work` (já em memória), nunca toca `pkg`. Levanta exceção em estrutura
+    inesperada — quem chama decide o que fazer (ver `_sync_data_nodes`).
+    `label` é o rótulo-alvo: para a lane do meio pode diferir do texto atual
+    de `lane_root_pt` (ex. "ATIVIDADES" -> "SUBPROCESSOS"); para
+    esquerda/direita já bate por construção (nenhum efeito)."""
+    items = [i for i in items if i and i.strip()] or ["—"]
+    root_id = lane_root_pt.get("modelId")
+
+    pt_lst = work.find(_q(DGM, "ptLst"))
+    cxn_lst = work.find(_q(DGM, "cxnLst"))
+
+    hier_cxns = [
+        c
+        for c in cxn_lst.findall(_q(DGM, "cxn"))
+        if c.get("type") is None and c.get("srcId") == root_id
+    ]
+    child_ids = {c.get("destId") for c in hier_cxns}
+    content_pts = [
+        p for p in pt_lst.findall(_q(DGM, "pt")) if p.get("modelId") in child_ids
+    ]
+    if not content_pts:
+        raise ValueError(f"lane {label!r}: nenhum filho de conteúdo para usar de molde")
+
+    template_run = None
+    for p in content_pts:
+        template_run = p.find(f".//{_q(A, 'r')}")
+        if template_run is not None:
+            break
+    if template_run is None:
+        raise ValueError(f"lane {label!r}: nenhum run de formatação para clonar")
+
+    trans_ids = set()
+    for c in hier_cxns:
+        trans_ids.add(c.get("parTransId"))
+        trans_ids.add(c.get("sibTransId"))
+    pres_of_cxns = [
+        c
+        for c in cxn_lst.findall(_q(DGM, "cxn"))
+        if c.get("type") == "presOf" and c.get("srcId") in child_ids
+    ]
+
+    for c in hier_cxns:
+        cxn_lst.remove(c)
+    for c in pres_of_cxns:
+        cxn_lst.remove(c)
+    for p in list(pt_lst.findall(_q(DGM, "pt"))):
+        mid = p.get("modelId")
+        if mid in child_ids or mid in trans_ids:
+            pt_lst.remove(p)
+
+    for k, text in enumerate(items):
+        content_id, par_id, sib_id, hier_id, pres_id = (
+            _new_guid(), _new_guid(), _new_guid(), _new_guid(), _new_guid()
+        )
+
+        content_pt = etree.SubElement(pt_lst, _q(DGM, "pt"))
+        content_pt.set("modelId", content_id)
+        pr = etree.SubElement(content_pt, _q(DGM, "prSet"))
+        pr.set("phldrT", "[Texto]")
+        pr.set("custT", "1")
+        etree.SubElement(content_pt, _q(DGM, "spPr"))
+        t = etree.SubElement(content_pt, _q(DGM, "t"))
+        etree.SubElement(t, _q(A, "bodyPr"))
+        etree.SubElement(t, _q(A, "lstStyle"))
+        p_el = etree.SubElement(t, _q(A, "p"))
+        r_el = copy.deepcopy(template_run)
+        _set_run_text(r_el, text)
+        p_el.append(r_el)
+
+        for trans_type, trans_id in (("parTrans", par_id), ("sibTrans", sib_id)):
+            trans_pt = etree.SubElement(pt_lst, _q(DGM, "pt"))
+            trans_pt.set("modelId", trans_id)
+            trans_pt.set("type", trans_type)
+            trans_pt.set("cxnId", hier_id)
+            etree.SubElement(trans_pt, _q(DGM, "prSet"))
+            etree.SubElement(trans_pt, _q(DGM, "spPr"))
+            tt = etree.SubElement(trans_pt, _q(DGM, "t"))
+            etree.SubElement(tt, _q(A, "bodyPr"))
+            etree.SubElement(tt, _q(A, "lstStyle"))
+            pp = etree.SubElement(tt, _q(A, "p"))
+            etree.SubElement(pp, _q(A, "endParaRPr"))
+
+        hier_cxn = etree.SubElement(cxn_lst, _q(DGM, "cxn"))
+        hier_cxn.set("modelId", hier_id)
+        hier_cxn.set("srcId", root_id)
+        hier_cxn.set("destId", content_id)
+        hier_cxn.set("srcOrd", str(k))
+        hier_cxn.set("destOrd", "0")
+        hier_cxn.set("parTransId", par_id)
+        hier_cxn.set("sibTransId", sib_id)
+
+        pres_cxn = etree.SubElement(cxn_lst, _q(DGM, "cxn"))
+        pres_cxn.set("modelId", pres_id)
+        pres_cxn.set("type", "presOf")
+        pres_cxn.set("srcId", content_id)
+        pres_cxn.set("destId", shared_pres_id)
+        pres_cxn.set("srcOrd", "0")
+        pres_cxn.set("destOrd", str(k))
+        pres_cxn.set(
+            "presId", "urn:microsoft.com/office/officeart/2005/8/layout/hProcess7"
+        )
+
+    for p in lane_root_pt.iter(_q(A, "p")):
+        rs = p.findall(_q(A, "r"))
+        if rs:
+            _set_run_text(rs[0], label)
+            for extra in rs[1:]:
+                p.remove(extra)
+            break
+
+
+def _sync_data_nodes(
+    pkg: Package, data_name: str, lanes: list[tuple[str, list[str]]]
+) -> None:
+    """Reconstrói os nós de conteúdo das 3 lanes no modelo de dados do
+    SmartArt (editabilidade pós-geração no PowerPoint). Isolamento
+    transacional: só grava (`pkg.set_part`) se as 3 lanes forem
+    reconstruídas sem exceção; qualquer falha (pré-checagem ou no meio da
+    reconstrução) deixa `data_name` 100% intocado."""
+    if not pkg.has_part(data_name):
+        return
     root = etree.fromstring(pkg.part(data_name))
-    # Coletar todos os <a:t> em ordem de documento e os novos valores esperados
-    new_values = []
-    for label, items in lanes:
-        new_values.append(label)
-        new_values.extend(items)
-    ts = list(root.iter(_q(A, "t")))
-    # Só sincroniza se as contagens baterem razoavelmente; caso contrário, deixa
-    # o modelo como está (o render usa o desenho, que já foi corrigido).
-    text_ts = [t for t in ts if (t.text or "").strip()]
-    if len(text_ts) == len(new_values):
-        for t, val in zip(text_ts, new_values):
-            t.text = val
-        pkg.set_part(data_name, etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
+    work = copy.deepcopy(root)
+
+    left_label, right_label = lanes[0][0], lanes[2][0]
+    found = _find_lane_roots(work, left_label, right_label)
+    if found is None:
+        return
+
+    try:
+        for (lane_root_pt, shared_pres_id), (label, items) in zip(found, lanes):
+            _rebuild_lane_nodes(work, lane_root_pt, shared_pres_id, label, items)
+    except Exception:
+        return
+
+    pkg.set_part(
+        data_name,
+        etree.tostring(work, xml_declaration=True, encoding="UTF-8", standalone=True),
+    )
 
 
 def fill_igoe_slide(
