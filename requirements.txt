@@ -3,8 +3,8 @@ pydantic
 graphviz
 python-pptx
 lxml
-openai
 google-genai
 python-docx
 pypdf
 pillow
+requests

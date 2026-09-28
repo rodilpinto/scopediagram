@@ -1,7 +1,7 @@
 ---
 title: "Decisões abertas — ledger consolidado (PPTX)"
 maintained_by: Claude Code sessions; só Rodrigo resolve
-last_updated: 2026-07-09
+last_updated: 2026-09-28
 related: [_TODO.md, SESSION-ONBOARD-pptx.md, log.md]
 ---
 
@@ -67,3 +67,18 @@ e verificado:
   consistente" não pôde ser testada nesta máquina (sem PowerPoint instalado;
   LibreOffice não recalcula SmartArt a partir do modelo de dados). Isso é do usuário
   confirmar manualmente.
+
+---
+
+## D4 — Mergear `feat/llm-cadeia` em `main` (deploy do llm_cadeia)?
+- **Status:** 🔴 OPEN (aguarda a reunião de 29/09 e o ok do Rodrigo)
+- **Tipo:** deploy
+- **Onde aparece:** branch `feat/llm-cadeia` (github + git.camara.gov.br); tag de volta `pre-llm-cadeia`
+
+**A questão.** A branch troca Gemini/OpenAI diretos pela cadeia `llm_cadeia` (verificada ao vivo,
+ver log 2026-09-28). Mergear muda o app publicado: a OpenAI paga sai dos Secrets e vira chave do
+usuário; o Gemini deixa de receber `response_json_schema`; os modelos passam a ser os do módulo.
+
+📝 Sugestão minha (não validada): mergear depois da reunião, com os Secrets do Cloud já só com as
+chaves gratuitas (sem `LLM_BASE_URL`), e testar uma geração no Cloud logo após o Reboot.
+

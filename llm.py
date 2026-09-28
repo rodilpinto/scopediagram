@@ -1,48 +1,24 @@
 import json
-import os
 from pathlib import Path
 
-from google import genai
-from openai import OpenAI
 from pydantic import ValidationError
 
+from llm_cadeia import gerar
 from schema import ScopeDiagram, scope_diagram_json_schema
 
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "extraction.txt"
-DEFAULT_PROVIDER = "gemini"
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
-DEFAULT_OPENAI_MODEL = "gpt-5-mini"
+
+# O schema tem listas por subprocesso; com 12 subprocessos o JSON passa fácil de 4K tokens.
+MAX_TOKENS = 16384
 
 
 class LLMResponseError(RuntimeError):
     pass
 
 
-def _read_secret(name: str) -> str | None:
-    value = os.getenv(name)
-    if value:
-        return value
-
-    try:
-        import streamlit as st
-
-        secret_value = st.secrets.get(name)
-        if secret_value:
-            return str(secret_value)
-    except Exception:
-        return None
-
-    return None
-
-
-def has_configured_api_key(provider: str) -> bool:
-    provider_name = provider.lower()
-    if provider_name == "openai":
-        return bool(_read_secret("OPENAI_API_KEY"))
-    if provider_name == "gemini":
-        return bool(_read_secret("GEMINI_API_KEY") or _read_secret("GOOGLE_API_KEY"))
-    return False
+class LLMUnavailableError(RuntimeError):
+    pass
 
 
 def _load_prompt(text: str) -> str:
@@ -51,85 +27,32 @@ def _load_prompt(text: str) -> str:
     return prompt_template.replace("{schema}", schema).replace("{input}", text)
 
 
-def _extract_with_gemini(text: str, model: str) -> ScopeDiagram:
-    api_key = _read_secret("GEMINI_API_KEY") or _read_secret("GOOGLE_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "A chave da Gemini não foi configurada. Defina `GEMINI_API_KEY` ou `GOOGLE_API_KEY` nas variáveis de ambiente ou em `st.secrets`."
-        )
+def extract_scope(text: str) -> tuple[ScopeDiagram, str]:
+    """Extrai o ScopeDiagram via llm_cadeia. Devolve (diagrama, origem "provedor (modelo)").
 
-    client = genai.Client(api_key=api_key)
-    prompt = _load_prompt(text)
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "response_json_schema": scope_diagram_json_schema(),
-        },
-    )
+    Quem responde é decidido pela cadeia (local → gemini → ... ; ver llm_cadeia/README.md).
+    O prompt já pede "APENAS JSON válido" e traz o schema; json=True faz o Gemini devolver
+    JSON puro e retira a cerca ```json dos demais. A validação continua sendo o pydantic.
+    """
+    resposta = gerar(_load_prompt(text), json=True, max_tokens=MAX_TOKENS)
 
-    content = getattr(response, "text", None)
-    if not content:
-        raise LLMResponseError("O modelo Gemini retornou uma resposta vazia.")
+    if resposta.texto is None:
+        if resposta.origem:
+            raise LLMResponseError(f"O modelo {resposta.origem} retornou uma resposta vazia.")
+        detalhes = "\n".join(resposta.tentativas) or "Nenhum provedor de IA configurado (veja `llm_cadeia/README.md`)."
+        raise LLMUnavailableError(f"Nenhum provedor de IA respondeu.\n\n{detalhes}")
 
-    try:
-        return ScopeDiagram.model_validate_json(content)
-    except ValidationError as exc:
-        raise LLMResponseError(
-            f"O modelo Gemini retornou JSON inválido para o schema.\n\n{exc}\n\nSaída bruta:\n{content}"
-        ) from exc
-
-
-def _extract_with_openai(text: str, model: str) -> ScopeDiagram:
-    api_key = _read_secret("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "A chave da OpenAI não foi configurada. Defina `OPENAI_API_KEY` nas variáveis de ambiente ou em `st.secrets`."
-        )
-
-    prompt = _load_prompt(text)
-    client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    content = response.choices[0].message.content
-    if not content:
-        raise LLMResponseError("O modelo OpenAI retornou uma resposta vazia.")
-
+    content = resposta.texto
     try:
         data = json.loads(content)
     except json.JSONDecodeError as exc:
         raise LLMResponseError(
-            f"O modelo OpenAI não retornou JSON válido.\n\nSaída bruta:\n{content}"
+            f"O modelo {resposta.origem} não retornou JSON válido.\n\nSaída bruta:\n{content}"
         ) from exc
 
     try:
-        return ScopeDiagram.model_validate(data)
+        return ScopeDiagram.model_validate(data), resposta.origem
     except ValidationError as exc:
         raise LLMResponseError(
-            f"O modelo OpenAI retornou JSON inválido para o schema.\n\n{exc}\n\nSaída bruta:\n{content}"
+            f"O modelo {resposta.origem} retornou JSON inválido para o schema.\n\n{exc}\n\nSaída bruta:\n{content}"
         ) from exc
-
-
-def get_default_provider() -> str:
-    return (_read_secret("LLM_PROVIDER") or os.getenv("LLM_PROVIDER") or DEFAULT_PROVIDER).lower()
-
-
-def get_default_model(provider: str) -> str:
-    if provider == "openai":
-        return _read_secret("OPENAI_MODEL") or os.getenv("OPENAI_MODEL") or DEFAULT_OPENAI_MODEL
-    return _read_secret("GEMINI_MODEL") or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
-
-
-def extract_scope(text: str, provider: str | None = None, model: str | None = None) -> ScopeDiagram:
-    provider_name = (provider or get_default_provider()).lower()
-    model_name = model or get_default_model(provider_name)
-
-    if provider_name == "openai":
-        return _extract_with_openai(text, model_name)
-    if provider_name == "gemini":
-        return _extract_with_gemini(text, model_name)
-    raise RuntimeError("Provedor de LLM inválido. Use `gemini` ou `openai`.")
