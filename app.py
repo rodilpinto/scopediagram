@@ -4,13 +4,8 @@ import streamlit as st
 
 from docs_content import render_documentacao
 from input_parser import read_uploaded_file
-from llm import (
-    LLMResponseError,
-    extract_scope,
-    get_default_model,
-    get_default_provider,
-    has_configured_api_key,
-)
+from llm import LLMResponseError, LLMUnavailableError, extract_scope
+from llm_cadeia.painel_streamlit import painel_llm
 from ppt import generate_ppt_bytes
 from renderer import build_preview_images
 from schema import GlobalElements, Process, ScopeDiagram, Subprocess
@@ -140,25 +135,12 @@ st.caption(
 with st.sidebar:
     st.header("Configuração")
     st.write(
-        "Para deploy público no Streamlit, configure a chave da API em `Secrets`. O provedor padrão deste app é Gemini."
+        "A IA tenta, em ordem, os provedores configurados em `Secrets` (LLM local da Câmara, Gemini, Groq, "
+        "Cerebras, OpenRouter) até um responder. Para usar a OpenAI paga, informe sua chave em "
+        "\"Usar minha própria chave de IA\" › Outro (URL base `https://api.openai.com/v1`)."
     )
     st.write("O aplicativo pode receber texto, Word (`.docx`) e PDF com texto extraível.")
-    provider = st.selectbox(
-        "Provedor do modelo",
-        options=["gemini", "openai"],
-        index=0 if get_default_provider() == "gemini" else 1,
-        format_func=lambda value: "Google Gemini" if value == "gemini" else "OpenAI",
-    )
-    default_model = get_default_model(provider)
-    model = st.text_input("Modelo", value=default_model)
-
-    if has_configured_api_key(provider):
-        st.success("Chave de API configurada para o provedor selecionado.")
-    else:
-        if provider == "gemini":
-            st.warning("Chave não encontrada. Configure `GEMINI_API_KEY` ou `GOOGLE_API_KEY` em `Secrets`.")
-        else:
-            st.warning("Chave não encontrada. Configure `OPENAI_API_KEY` em `Secrets`.")
+    painel_llm()
 
 
 aba_gerador, aba_documentacao = st.tabs(["Gerador", "Guia e documentação"])
@@ -254,24 +236,16 @@ with aba_gerador:
                 st.error("É obrigatório informar um conteúdo de entrada.")
                 st.stop()
 
-            if not has_configured_api_key(provider):
-                if provider == "gemini":
-                    st.error(
-                        "A chave da Gemini não está configurada. Adicione `GEMINI_API_KEY` ou `GOOGLE_API_KEY` em `Secrets` no Streamlit."
-                    )
-                else:
-                    st.error("A chave da OpenAI não está configurada. Adicione `OPENAI_API_KEY` em `Secrets` no Streamlit.")
-                st.stop()
-
             try:
                 with st.spinner("Extraindo JSON estruturado do diagrama de escopo..."):
-                    scope = extract_scope(source_text, provider=provider, model=model)
+                    scope, origem = extract_scope(source_text)
             except LLMResponseError as exc:
                 st.error("O modelo retornou uma resposta inválida para o schema definido.")
                 st.code(str(exc))
                 st.stop()
-            except RuntimeError as exc:
-                st.error(str(exc))
+            except LLMUnavailableError as exc:
+                st.error("IA indisponível agora. Tentativas:")
+                st.code(str(exc))
                 st.stop()
             except Exception as exc:
                 st.error("Ocorreu um erro inesperado durante a extração.")
@@ -279,6 +253,7 @@ with aba_gerador:
                 st.stop()
 
             _store_generated_scope(scope, input_mode)
+            st.session_state["generated_origin"] = origem
 
         else:
             try:
@@ -287,6 +262,7 @@ with aba_gerador:
                 st.error(str(exc))
                 st.stop()
             _store_generated_scope(scope, input_mode)
+            st.session_state.pop("generated_origin", None)
 
     generated_scope = _get_generated_scope()
     if generated_scope is not None:
@@ -296,9 +272,12 @@ with aba_gerador:
                 st.session_state.pop("generated_scope", None)
                 st.session_state.pop("generated_source_mode", None)
                 st.session_state.pop("preview_selection", None)
+                st.session_state.pop("generated_origin", None)
                 st.rerun()
         with action_col2:
             st.caption("O resultado gerado permanece carregado enquanto você alterna entre subprocessos e downloads.")
+            if st.session_state.get("generated_origin"):
+                st.caption(f"Extraído por: {st.session_state['generated_origin']}")
 
         st.subheader("Pré-visualização")
         selected_preview = None
