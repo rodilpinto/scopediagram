@@ -71,7 +71,7 @@ e verificado:
 ---
 
 ## D4 — Mergear `feat/llm-cadeia` em `main` (deploy do llm_cadeia)?
-- **Status:** 🔴 OPEN (aguarda a reunião de 29/09 e o ok do Rodrigo)
+- **Status:** 🟢 DECIDIDA (2026-09-28)
 - **Tipo:** deploy
 - **Onde aparece:** branch `feat/llm-cadeia` (github + git.camara.gov.br); tag de volta `pre-llm-cadeia`
 
@@ -82,3 +82,4 @@ usuário; o Gemini deixa de receber `response_json_schema`; os modelos passam a 
 📝 Sugestão minha (não validada): mergear depois da reunião, com os Secrets do Cloud já só com as
 chaves gratuitas (sem `LLM_BASE_URL`), e testar uma geração no Cloud logo após o Reboot.
 
+**Decisão tomada:** ✅ Rodrigo autorizou o merge + push em 28/09 (a versão da reunião é outra).

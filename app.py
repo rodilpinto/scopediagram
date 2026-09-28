@@ -254,7 +254,6 @@ with aba_gerador:
 
             _store_generated_scope(scope, input_mode)
             st.session_state["generated_origin"] = origem
-            st.rerun()  # redesenha a barra lateral com "Última resposta: ..."
 
         else:
             try:

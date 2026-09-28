@@ -1,5 +1,18 @@
 # PPTX — log (append-only, mais novo no topo)
 
+## [2026-09-28] feat | `llm_cadeia` 1.0.1 recopiado + merge de `feat/llm-cadeia` em `main`
+
+Rodrigo esclareceu que a versão do diagrama de escopo apresentada na reunião é outra: liberado mergear aqui.
+Os 3 achados da adoção foram corrigidos **na origem** (`buscador-normativos`, `llm_cadeia` 1.0.1) e a pasta foi
+recopiada sem edições (`diff -r` = idêntica, fora a linha de procedência):
+- "Última resposta" agora aparece na mesma execução (gancho `ao_responder`); o `st.rerun()` do `app.py` foi
+  retirado e o app foi verificado ao vivo sem ele (porta 8531): barra lateral "Última resposta: local (google/gemma-4)".
+- OpenAI de raciocínio (`gpt-5*`): repete com `max_completion_tokens` e sem `temperature`. ⚠ Só teste com dublê.
+- Docstrings desatualizadas do módulo corrigidas.
+Testes: `llm_cadeia` 23 passed; `tests` 19 passed.
+
+---
+
 ## [2026-09-28] feat | Adoção do llm_cadeia (branch `feat/llm-cadeia`, NÃO mergeada)
 
 Trocadas as chamadas diretas a Gemini/OpenAI de `llm.py` pelo módulo compartilhado
