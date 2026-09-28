@@ -10,7 +10,7 @@ related: [_DECISOES-PENDENTES.md, log.md]
 - [x] ~~**Antes da reunião (29/09):** Rodrigo confere no Streamlit Cloud que `GEMINI_API_KEY` continua lá e que o app publicado (`main`) gera; se a chave for a nova (nuati.secin), pôr `GEMINI_MODEL = "gemini-3.5-flash-lite"` (a nova recebe 404 em `gemini-2.5-flash`, padrão da `main`). Reboot app.~~ Não se aplica: a versão da reunião é outra (Rodrigo, 28/09); e o merge do llm_cadeia tira o modelo fixo.
 - [x] Mergear `feat/llm-cadeia` em `main` (D4 decidida 28/09).
 - [ ] Rodrigo: nos Secrets do Cloud, só as chaves gratuitas (sem `LLM_BASE_URL`/`LLM_MODEL`) + Reboot app; testar uma geração no app publicado.
-- [ ] Rodrigo: autorizar o push do `master` do buscador (commit 1.0.1 só local; o log de lá pede não empurrar antes da reunião).
+- [x] Push do `master` do buscador: a sessão do buscador integrou a branch `llm-cadeia-1.0.1` (master `7f1c069`, 23 passed); cópia daqui conferida idêntica, procedência atualizada (28/09).
 - [ ] Verificar ao vivo a OpenAI paga via "Outro" quando houver chave (hoje só dublê).
 - [x] Levar à origem (`buscador-normativos`) as observações sobre o `llm_cadeia` (feito: 1.0.1, recopiado) (log 2026-09-28 e D4): Gemma+JSON verificado; "Última resposta" precisa de rerun; OpenAI paga via "Outro" não testada (gpt-5 pode recusar `temperature`/`max_tokens`).
 
