@@ -5,9 +5,6 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 
 ## Abertos
 
-- 🟡 **Login no git.camara.gov.br e push da branch de trabalho.** Rodar no prompt `! git push origin feat/llm-cadeia`
-  e fazer o login do Git Credential Manager. Por quê: a credencial do `origin` expira com frequência (falhou 3 vezes
-  em 28-29/09; ver `LESSONS.md`); o push para o GitHub foi feito. Destrava: o espelho da Câmara igual ao GitHub.
 - 🟡 **Conferir em share.streamlit.io qual branch o app de produção serve, e a URL.** Os docs dizem `main`, mas
   ninguém conferiu no painel (pede o login do Rodrigo). Destrava: o passe da D-C23 (recriar apps sabendo o que existe)
   e o teste de geração no ar.
@@ -21,6 +18,8 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 
 ## Feitos
 
+- 2026-09-29 · Credencial do git.camara renovada: `feat/llm-cadeia` igual no `origin` e no `github` (`f5a08e8`,
+  conferido com `git ls-remote`). Se voltar a falhar: `LESSONS.md` 28/09.
 - 2026-09-29 · Autorizou o snapshot de memória do checkpoint (`pptx_state_2026-09-29.md`).
 - 2026-09-28 · Criou `~/.streamlit/secrets.toml` (fora do repo) com as chaves e o Gemma local.
 - 2026-09-28 · Autorizou merge de `feat/llm-cadeia` em `main` (D4) e a integração da branch no buscador.

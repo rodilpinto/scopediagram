@@ -23,7 +23,7 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
 - **`main` = `0b5aee1`** (merge do `llm_cadeia` 1.0.1, D4). Os docs dizem que o Streamlit Cloud serve a `main`;
   **não conferido** no painel, e **nenhuma geração no Cloud foi verificada** (ver `BLOCKED-ON-RODRIGO.md`).
 - **Branch de trabalho `feat/llm-cadeia`**: à frente da `main` só com docs (procedência 7f1c069, log, este
-  checkpoint). No GitHub está atualizada; no `origin` ficou atrás (credencial expirada; `LESSONS.md`).
+  checkpoint). Igual no `github` e no `origin` (`git ls-remote`); se o push do `origin` falhar por auth, `LESSONS.md`.
   Esta sessão: `bc75099` → `7a2c6ba` → `b972665` → `9d52dc5` → commit do checkpoint. ⚠ O SHA mais novo listado
   aqui está sempre um atrás do commit que gravou este arquivo; a cadeia real termina em `git log --oneline -3`.
 - **Retorno:** tag `pre-llm-cadeia` ("antes do llm_cadeia", = `6083a90`): `git checkout pre-llm-cadeia`.
@@ -35,7 +35,8 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
 
 ## 3. Achados críticos (não perder)
 - `llm_cadeia/` está **congelada** (D-C24): não editar; defeito vira pedido à sessão do framework. Procedência na
-  1ª linha de `llm_cadeia/README.md`.
+  1ª linha de `llm_cadeia/README.md`. A spec que esse README cita (`docs/superpowers/specs/2026-09-28-llm-cadeia-portatil-design.md`)
+  **não existe aqui**: vive no repo buscador-normativos.
 - Da rede da Câmara (PC do trabalho, 28/09) os 4 serviços externos passaram: Gemini, Groq, Cerebras, OpenRouter. O Gemma (`10.10.111.125:1234`) só é alcançável daqui;
   no Cloud, sem `LLM_BASE_URL`.
 - Testes locais: `py -3.13 -m pytest tests -q` e `py -3.13 -m pytest llm_cadeia/test_llm_cadeia.py -q` (o `python`

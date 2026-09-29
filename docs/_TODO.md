@@ -15,6 +15,8 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON
   Até lá: não criar/renomear branches, não recriar apps, não editar `llm_cadeia/`, não fazer push na `main`.
 - [ ] No passe: levar o commit de trabalho pendente (`feat/llm-cadeia`, 2 commits só de docs à frente da `main`)
   para a branch certa, e apagar `feat/llm-cadeia` só depois dos apps novos conferidos no ar (ordem da D-C22).
+- [ ] Pedido à sessão do framework (D-C24): o README do `llm_cadeia` cita uma spec que só existe no buscador;
+  na cópia, apontar o repo de origem (achado do dogfood de 29/09).
 - [ ] No passe: rodapé "Versão 1.0" fixo em `app.py` (`_render_efficiency_footer`) passa a vir da tag/framework.
 
 ## P1 · Concluído recentemente
