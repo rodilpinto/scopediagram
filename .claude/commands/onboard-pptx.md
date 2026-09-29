@@ -1,54 +1,51 @@
-# Onboard — PPTX (geração do PowerPoint)
+# Onboard: scopediagram (área `pptx`, cobre o app inteiro)
 
 **Uso**: `/onboard-pptx`
 
-Carrega o contexto da área de geração do PPTX (estado atual, decisões, pendências)
-para uma sessão nova começar pronta. **LÊ e RESUME — não começa trabalho sozinho.**
+Carrega o contexto do projeto para uma sessão nova. **LÊ e RESUME; não começa trabalho sozinho.**
+Este arquivo guarda só procedimento e ponteiros; fatos de estado moram nos arquivos abaixo.
 
 ---
 
 ## O que fazer
-Leia estes arquivos nesta ordem e resuma o estado ao usuário. **NÃO comece a
-trabalhar até o usuário dar uma tarefa.**
+Leia nesta ordem:
 
-### Passo 1 — Snapshot de estado (entry point, ≤ 1 página)
-`docs/SESSION-ONBOARD-pptx.md` — leia inteiro; §2 (feito) e §5 (próximo) são a fonte da verdade.
+1. `docs/SESSION-ONBOARD-pptx.md` inteiro (entry point; §2 estado, §5 próximo movimento).
+2. `BLOCKED-ON-RODRIGO.md` (raiz): ações que só o Rodrigo pode fazer.
+3. `docs/_TODO.md` (P0/P1) e `docs/_DECISOES-PENDENTES.md` (inclui o eco das decisões do buscador que valem aqui).
+4. `LESSONS.md` (raiz): skim.
+5. Log recente: `grep -n "^## \[" docs/log.md | head -5` e leia as 2 entradas do topo.
+6. Se o state file estiver raso: o snapshot de memória mais recente listado em
+   `~/.claude/projects/C--Users-P-8106-Documents-solucoes-scopediagram/memory/MEMORY.md`.
+7. Git: `git log --oneline -3`, `git status --short -b`, `git branch -a`.
 
-### Passo 2 — Ledgers
-`docs/_TODO.md` (P0/P1) e `docs/_DECISOES-PENDENTES.md` (decisões 🔴/🟡 abertas + o que cada uma bloqueia).
-
-### Passo 3 — Spec / arquitetura (se necessário)
-`docs/superpowers/specs/2026-07-02-template-based-ppt-generation-design.md` — a abordagem e as suposições verificadas.
-
-### Passo 4 — Snapshot de memória (se o state file estiver raso)
-`~/.claude/projects/C--Users-P-8106-Documents-solucoes-scopediagram/memory/pptx_state_2026-07-07.md`.
-
-### Passo 5 — Log recente (skim)
-`grep -n "^## \[" docs/log.md | head -10`, leia as 2-3 entradas do topo.
+Se a tarefa envolver o LLM: `llm_cadeia/README.md` (a pasta é congelada; ver as decisões).
+Se envolver o PPTX: `docs/superpowers/specs/2026-07-02-template-based-ppt-generation-design.md`.
 
 ---
 
 ## Depois de ler
-Responda um resumo curto (≤ 8 linhas):
-1. Commit atual (`git log --oneline -1`) + status do working tree + branch (`feature/template-ppt-generation`).
-2. Último chunk concluído + saídas-chave (pacote `templatefill/`, 5 slides limpos).
-3. Próximo movimento (do §5): reagir ao teste ao vivo do usuário.
-4. Decisões abertas pendentes do usuário (D1/D2/D3 em `docs/_DECISOES-PENDENTES.md`).
+Resumo curto (≤ 8 linhas): branch + commit atual + working tree; estado (do §2); próximo movimento (do §5);
+decisões abertas e ações do `BLOCKED-ON-RODRIGO.md`.
 
-Depois pergunte: **"Tarefa de hoje?"**
+Se a mensagem do usuário já trouxe uma tarefa junto com o onboard, siga com ela depois do resumo.
+Senão, pergunte **"Tarefa de hoje?"** e pare.
 
-Não: editar arquivos · começar trabalho · commitar · explorar além dos docs acima. Aguarde a tarefa.
+Não: editar arquivos · commitar · explorar além dos docs acima antes de receber a tarefa.
 
 ---
 
 ## Verificações rápidas úteis
-- App ao vivo: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8501` (server em background pode não estar mais de pé numa sessão nova).
-- Regenerar deck de teste: rodar `tests/test_generation.py` (só precisa de `lxml` + `pydantic`).
-- Render p/ QA: `soffice.exe --headless --convert-to pdf` → PyMuPDF (`fitz`) → PNG (poppler/`dot` não instalados).
+- Testes: `py -3.13 -m pytest tests -q` e `py -3.13 -m pytest llm_cadeia/test_llm_cadeia.py -q`
+  (use o launcher `py`; o `python` do PATH é o atalho da Microsoft Store).
+- App local: `py -3.13 -m streamlit run app.py --server.port 8531` (8502 pode estar com o app de Checklist).
+- LLM ao vivo (só na rede da Câmara): `py -3.13 -m llm_cadeia` com os segredos de `~/.streamlit/secrets.toml`.
+- QA visual fiel do PPTX: `py -3.13 tools/render_pptx_powerpoint.py <arquivo.pptx>` (PowerPoint real via COM).
 
 ## Follow-ups comuns
 | Pedido | Ler também | Então |
 |---|---|---|
-| "corrige overflow das bandas" | `templatefill/igoe.py` (`_lane_font_fit`, `fill_igoe_slide`) | replicar auto-fit p/ as caixas de banda; render p/ conferir; checkpoint |
-| "mergea em main" | `docs/_DECISOES-PENDENTES.md` D2 | `superpowers:finishing-a-development-branch`; checkpoint |
-| "o app quebrou" | traceback do usuário; `app.py`; `templatefill/` | `superpowers:systematic-debugging`; checkpoint |
+| "vamos fazer o passe do framework" | decisões D-C22/23/24 (eco em `_DECISOES-PENDENTES.md`) | seguir a receita do README do framework; checkpoint |
+| "o LLM falhou" | `llm_cadeia/README.md` (esperas, segredos) | diagnosticar; defeito no módulo → pedido ao framework, não editar |
+| "corrige overflow das bandas" | `templatefill/igoe.py` | replicar o auto-fit das lanes; render via PowerPoint; checkpoint |
+| "o app quebrou" | traceback; `app.py`, `llm.py`, `templatefill/` | `superpowers:systematic-debugging`; checkpoint |

@@ -1,5 +1,18 @@
 # PPTX — log (append-only, mais novo no topo)
 
+## [2026-09-29] checkpoint | Handoff da sessão llm_cadeia + pausa do framework
+
+- State file (`SESSION-ONBOARD-pptx.md`) reescrito: estava em 13/07 (branch D3 "não mergeada", secrets.example
+  "pendente"); agora cobre o app inteiro (PPTX + LLM) e a pausa D-C23.
+- Criados na raiz: `BLOCKED-ON-RODRIGO.md` (ações só-humano) e `LESSONS.md` (lições transversais desta e da sessão
+  de 13/07). `_TODO.md` reorganizado (P0 = aguardar o passe do framework); itens velhos de D3 fechados.
+- `_DECISOES-PENDENTES.md`: eco das D-C22/23/24 (fonte: buscador) e marca de "superado" na afirmação da D3 de que
+  não havia PowerPoint nesta máquina.
+- `/onboard-pptx` reescrito (apontava snapshot inexistente e a branch `feature/template-ppt-generation`).
+- Snapshot de memória `pptx_state_2026-09-29.md` (autorizado pelo Rodrigo).
+
+---
+
 ## [2026-09-29] pausa | Pausa para o framework (D-C23), branch `feat/llm-cadeia` @ `b972665`
 
 Centralização pedida pela sessão do buscador (decisões D-C22/D-C23/D-C24 em `buscador-normativos/_DECISOES-PENDENTES.md`):

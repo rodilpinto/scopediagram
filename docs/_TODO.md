@@ -1,33 +1,37 @@
 ---
 title: PPTX TODOs (persistent, version-controlled)
-last_audit: 2026-09-28
-related: [_DECISOES-PENDENTES.md, log.md]
+last_audit: 2026-09-29
+related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON-RODRIGO.md, ../LESSONS.md]
 ---
 
-# PPTX TODOs — o que está pendente e onde
+# PPTX TODOs: o que está pendente e onde
 
-## P0 — Bloqueadores / em andamento
-- [x] ~~**Antes da reunião (29/09):** Rodrigo confere no Streamlit Cloud que `GEMINI_API_KEY` continua lá e que o app publicado (`main`) gera; se a chave for a nova (nuati.secin), pôr `GEMINI_MODEL = "gemini-3.5-flash-lite"` (a nova recebe 404 em `gemini-2.5-flash`, padrão da `main`). Reboot app.~~ Não se aplica: a versão da reunião é outra (Rodrigo, 28/09); e o merge do llm_cadeia tira o modelo fixo.
-- [x] Mergear `feat/llm-cadeia` em `main` (D4 decidida 28/09).
-- [ ] Rodrigo: nos Secrets do Cloud, só as chaves gratuitas (sem `LLM_BASE_URL`/`LLM_MODEL`) + Reboot app; testar uma geração no app publicado.
-- [x] Push do `master` do buscador: a sessão do buscador integrou a branch `llm-cadeia-1.0.1` (master `7f1c069`, 23 passed); cópia daqui conferida idêntica, procedência atualizada (28/09).
-- [ ] Verificar ao vivo a OpenAI paga via "Outro" quando houver chave (hoje só dublê).
-- [x] Levar à origem (`buscador-normativos`) as observações sobre o `llm_cadeia` (feito: 1.0.1, recopiado) (log 2026-09-28 e D4): Gemma+JSON verificado; "Última resposta" precisa de rerun; OpenAI paga via "Outro" não testada (gpt-5 pode recusar `temperature`/`max_tokens`).
+> Companion snapshot: `~/.claude/projects/C--Users-P-8106-Documents-solucoes-scopediagram/memory/pptx_state_2026-09-29.md`.
+> Ações que só o Rodrigo pode fazer: `../BLOCKED-ON-RODRIGO.md` (não duplicadas aqui).
 
-## P1 — Trabalho ativo / concluído recentemente
-- [x] Motor OPC `templatefill/opc.py` (delete/clone de slides + partes SmartArt) — `f2e55aa`.
-- [x] Preenchimento IGOE `templatefill/igoe.py` (título, bandas, eventos, lanes) — `f2e55aa`.
-- [x] Orquestrador `templatefill/builder.py` + shim `ppt.py` + `ppt_legacy.py` — `f2e55aa`.
-- [x] Auto-fit de fonte nas lanes + z-order dos eventos — `55d87ea`.
-- [x] Testes de fumaça + `lxml` no requirements — `2b912ea`.
-- [x] Pré-visualização não-fatal (Graphviz opcional) — `5e9d1b7`.
-- [x] Teste do app ao vivo pelo usuário — funcionou bem, sem overflow/traceback (D1 decidida).
-- [x] Merge da branch `feature/template-ppt-generation` em `main` + deploy — feito 2026-07-08, push nos dois remotes (D2 decidida).
-- [x] Reconstrução do modelo de dados do SmartArt para editabilidade pós-geração no PowerPoint (D3 decidida e implementada) — `_find_lane_roots`/`_rebuild_lane_nodes`/`_sync_data_nodes` em `templatefill/igoe.py`, substituindo `_sync_data_text`. Branch `feature/smartart-data-model-editability`, spec+plano em `docs/superpowers/specs/` e `docs/superpowers/plans/`.
+## P0 · Em pausa: passe do framework (D-C22/D-C23/D-C24, eco em `_DECISOES-PENDENTES.md`)
+- [ ] **Aguardar o passe único deste app** vindo da sessão do framework (`rodilpinto/nuati-framework`): adotar o
+  framework **e** migrar para `main` (produção) / `homologacao` (playground), recriando os apps no Streamlit.
+  Até lá: não criar/renomear branches, não recriar apps, não editar `llm_cadeia/`, não fazer push na `main`.
+- [ ] No passe: levar o commit de trabalho pendente (`feat/llm-cadeia`, 2 commits só de docs à frente da `main`)
+  para a branch certa, e apagar `feat/llm-cadeia` só depois dos apps novos conferidos no ar (ordem da D-C22).
+- [ ] No passe: rodapé "Versão 1.0" fixo em `app.py` (`_render_efficiency_footer`) passa a vir da tag/framework.
 
-## P2 / P3 — Depois / nice-to-have
-- [ ] **Auto-fit nas BANDAS** (REGULADORES/RECURSOS/OBJETIVO) — hoje só as lanes têm auto-fit. Não necessário até agora (D1: sem relato de overflow), reavaliar se aparecer em uso real.
-- [ ] Validação manual do usuário: abrir o `.pptx` gerado (pós-D3) no PowerPoint de verdade, editar um item de lane no SmartArt, confirmar que não reverte para texto do template. **Não testável nesta máquina** (sem PowerPoint; LibreOffice não recalcula SmartArt a partir do modelo de dados).
-- [ ] Refinar o conteúdo LGPD de exemplo (era proposta minha, não validada) — só se o usuário quiser um deck de demonstração fiel; o objetivo real da sessão era o PPTX, não o conteúdo.
-- [x] `.streamlit/secrets.toml.example` restaurado e reescrito com os nomes do `llm_cadeia` (2026-09-28, branch `feat/llm-cadeia`).
-- [ ] Merge da branch `feature/smartart-data-model-editability` em `main` — aguardando o usuário validar a editabilidade no PowerPoint (item acima) antes de decidir se mergeia.
+## P1 · Concluído recentemente
+- [x] Adotar o `llm_cadeia` (Gemini/OpenAI diretos → `gerar`), verificado ao vivo na rede da Câmara (Gemma local,
+  JSON, extração IGOE, app com "Última resposta") · `bc75099`, merge na `main` `0b5aee1` (D4).
+- [x] Achados do módulo corrigidos na origem (1.0.1: gancho `ao_responder`, repetição `max_completion_tokens`,
+  docstrings); integrados no buscador `7f1c069`; cópia daqui idêntica, procedência atualizada · `7a2c6ba`, `b972665`.
+- [x] `.streamlit/secrets.toml.example` restaurado e reescrito com os nomes do `llm_cadeia` · `bc75099`.
+- [x] Tag de retorno `pre-llm-cadeia` (= `6083a90`) nas duas remotes.
+- [x] Reconstrução do modelo de dados do SmartArt (D3) mergeada em `main` · `6083a90`; validada no PowerPoint
+  real via COM em 2026-07-13.
+- [x] Motor `templatefill/` (OPC, IGOE, orquestrador), auto-fit das lanes, testes de fumaça, prévia não-fatal ·
+  `f2e55aa`, `55d87ea`, `2b912ea`, `5e9d1b7`; merge em `main` 2026-07-08 (D1/D2).
+
+## P2 / P3 · Depois / nice-to-have
+- [ ] Verificar ao vivo a OpenAI paga via "Outro" (hoje só dublê): depende de chave (ver `BLOCKED-ON-RODRIGO.md`);
+  resultado vai para a sessão do framework (D-C24).
+- [ ] **Auto-fit nas BANDAS** (REGULADORES/RECURSOS/OBJETIVO): hoje só as lanes têm. Reavaliar se aparecer overflow.
+- [ ] Refinar o conteúdo LGPD de exemplo (`exemplo_auditoria_lgpd_PROPOSTA-nao-validada.pptx`, proposta não
+  validada; **ignorado pelo git** por `.gitignore` `exemplo_*.pptx`, existe só nesta máquina): só se o Rodrigo quiser um deck de demonstração fiel.
