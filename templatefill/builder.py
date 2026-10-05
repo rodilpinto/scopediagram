@@ -15,7 +15,7 @@ from datetime import date
 from pathlib import Path
 
 from .igoe import fill_igoe_slide, set_cover
-from .opc import Package
+from pptx_opc import Package
 
 
 TEMPLATE_PATH = Path(__file__).resolve().parent.parent / (

@@ -17,7 +17,7 @@ import uuid
 
 from lxml import etree
 
-from .opc import Package, R_NS
+from pptx_opc.opc import Package, R_NS
 
 
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"

@@ -45,7 +45,7 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
 - PPTX: template é **SmartArt**; `python-pptx` não o edita → `templatefill/` mexe no XML (zip + lxml). O LibreOffice
   **não** regenera SmartArt; o `drawingN.xml` em cache é obrigatório. Cada lane = 1 `dsp:sp` com N parágrafos; no
   `data*.xml` cada item é um `dgm:pt` (D3). Lanes são achadas **por texto**, nunca por ordem.
-- QA visual fiel: PowerPoint real via COM, `tools/render_pptx_powerpoint.py`; aproximação: LibreOffice → PDF →
+- QA visual fiel: PowerPoint real via COM, `py -3.13 -m pptx_opc.render_powerpoint <pptx> <pasta>`; aproximação: LibreOffice → PDF →
   PyMuPDF.
 
 ## 4. Disciplina
@@ -65,7 +65,7 @@ da `main` sem ok do Rodrigo.
 | `../.streamlit/secrets.toml.example` | nomes dos segredos (sem valores) |
 | `superpowers/specs/2026-07-02-template-based-ppt-generation-design.md` | arquitetura do PPTX |
 | `superpowers/specs/2026-07-08-smartart-data-model-editability-design.md` | editabilidade do SmartArt (D3) |
-| `../templatefill/{opc,igoe,builder}.py` · `../tools/render_pptx_powerpoint.py` | motor PPTX · QA via PowerPoint |
+| `../templatefill/{igoe,builder}.py` · `../pptx_opc/` (OPC + render, do framework) | motor PPTX · QA via PowerPoint |
 
 ## 7. Como atualizar
 Ao mudar de estado: §2/§5, `last_updated`, entrada no `log.md`, ledgers; snapshot de memória datado se mudou muito.

@@ -24,7 +24,7 @@ from templatefill.igoe import (  # noqa: E402
     _sync_data_nodes,
     _text_of,
 )
-from templatefill.opc import Package  # noqa: E402
+from pptx_opc import Package  # noqa: E402
 
 
 def _fresh_work():

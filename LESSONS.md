@@ -33,5 +33,5 @@ cp1252.
 **Problema.** Vários docs diziam que a validação no PowerPoint real era impossível aqui.
 **Causa-raiz.** Afirmação negativa repetida sem ser testada.
 **Conserto.** O Office 2013 está em `C:\Program Files (x86)\Microsoft Office\Office15\POWERPNT.EXE`, com
-`pywin32`; `tools/render_pptx_powerpoint.py` renderiza via COM.
+`pywin32`; `python -m pptx_opc.render_powerpoint` renderiza via COM (até 05/10: `tools/render_pptx_powerpoint.py`).
 **Regra.** Afirmação de ausência ("não existe", "não dá") vira fato só depois de um comando que a teste.

@@ -40,7 +40,7 @@ Não: editar arquivos · commitar · explorar além dos docs acima antes de rece
   (use o launcher `py`; o `python` do PATH é o atalho da Microsoft Store).
 - App local: `py -3.13 -m streamlit run app.py --server.port 8531` (8502 pode estar com o app de Checklist).
 - LLM ao vivo (só na rede da Câmara): `py -3.13 -m llm_cadeia` com os segredos de `~/.streamlit/secrets.toml`.
-- QA visual fiel do PPTX: `py -3.13 tools/render_pptx_powerpoint.py <arquivo.pptx>` (PowerPoint real via COM).
+- QA visual fiel do PPTX: `py -3.13 -m pptx_opc.render_powerpoint <arquivo.pptx> <pasta_png>` (PowerPoint real via COM).
 
 ## Follow-ups comuns
 | Pedido | Ler também | Então |
