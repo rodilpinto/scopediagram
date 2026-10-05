@@ -1,0 +1,20 @@
+# Tema Streamlit (>= 1.46) da identidade visual Camara dos Deputados.
+# Copie para .streamlit/config.toml do app. Valores: branding/tokens.json
+
+[theme]
+primaryColor = "#2F7958"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#E5F7EC"
+textColor = "#414042"
+linkColor = "#2F7958"
+borderColor = "#D6D6D6"
+font = "REM:https://fonts.googleapis.com/css2?family=REM:wght@300;400;500;600;700&display=swap"
+headingFont = "REM"
+baseRadius = "0.375rem"
+showSidebarBorder = true
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

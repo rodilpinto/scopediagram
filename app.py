@@ -2,6 +2,7 @@ import json
 
 import streamlit as st
 
+from branding.streamlit_cd import cd_brand
 from docs_content import render_documentacao
 from economia import etapas_manuais
 from input_parser import read_uploaded_file
@@ -14,7 +15,7 @@ from tempo_economizado import estimar
 from tempo_economizado.painel_streamlit import mostrar_tempo_economizado
 
 
-st.set_page_config(page_title="Gerador de Diagramas de Escopo", layout="wide")
+cd_brand.configurar_pagina("Gerador de Diagramas de Escopo")
 
 
 def _render_efficiency_footer(scope: ScopeDiagram) -> None:
@@ -92,9 +93,9 @@ def _get_generated_scope() -> ScopeDiagram | None:
     return ScopeDiagram.model_validate(data)
 
 
-st.title("Gerador de Diagramas de Escopo (IGOE)")
-st.caption(
-    "Cole um texto, envie um arquivo ou preencha os campos estruturados para gerar o PowerPoint e a imagem do diagrama."
+cd_brand.cabecalho(
+    "Gerador de Diagramas de Escopo (IGOE)",
+    "Cole um texto, envie um arquivo ou preencha os campos estruturados para gerar o PowerPoint e a imagem do diagrama.",
 )
 
 with st.sidebar:
@@ -304,3 +305,6 @@ with aba_gerador:
 
 with aba_documentacao:
     render_documentacao()
+
+# App público: só a marca, sem assinatura de unidade (MIV p.14; F-A10 do framework).
+cd_brand.rodape(unidades=())
