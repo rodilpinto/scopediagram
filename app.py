@@ -3,64 +3,29 @@ import json
 import streamlit as st
 
 from docs_content import render_documentacao
+from economia import etapas_manuais
 from input_parser import read_uploaded_file
 from llm import LLMResponseError, LLMUnavailableError, extract_scope
 from llm_cadeia.painel_streamlit import painel_llm
 from ppt import generate_ppt_bytes
 from renderer import build_preview_images
 from schema import GlobalElements, Process, ScopeDiagram, Subprocess
+from tempo_economizado import estimar
+from tempo_economizado.painel_streamlit import mostrar_tempo_economizado
 
 
 st.set_page_config(page_title="Gerador de Diagramas de Escopo", layout="wide")
 
 
-def _estimate_time_saved_hours(scope: ScopeDiagram) -> float:
-    global_elements = scope.global_elements or GlobalElements()
-    input_count = len(global_elements.inputs)
-    output_count = len(global_elements.outputs)
-    regulator_count = len(global_elements.regulators)
-    resource_count = len(global_elements.resources)
-    subprocess_count = len(scope.subprocesses)
-    activity_count = sum(len(subprocess.activities) for subprocess in scope.subprocesses)
-
-    extraction_time = 0.6 + (input_count + output_count + regulator_count + resource_count) * 0.06
-    structuring_time = 0.8 + subprocess_count * 0.35 + activity_count * 0.08
-    diagramming_time = 0.9 + subprocess_count * 0.3 + (input_count + output_count) * 0.05
-    formatting_time = 0.7 + subprocess_count * 0.2
-    review_time = 0.4 + regulator_count * 0.03 + resource_count * 0.03
-
-    return round(extraction_time + structuring_time + diagramming_time + formatting_time + review_time, 1)
-
-
 def _render_efficiency_footer(scope: ScopeDiagram) -> None:
-    saved_hours = _estimate_time_saved_hours(scope)
     st.markdown("---")
-    col1, col2, col3 = st.columns([2, 1, 2])
+    # Sem tempo da ferramenta (automatico_min=0): mesmo número da conta antiga do app.
+    mostrar_tempo_economizado(estimar(etapas_manuais(scope)))
+    col1, col2 = st.columns(2)
     with col1:
         st.caption("Feito por Rodrigo Pinto")
     with col2:
         st.caption("Versão 1.0")
-    with col3:
-        st.caption(f"Economia estimada: {saved_hours} horas")
-
-    if st.toggle("Explicar economia de tempo", key="show_time_savings_details"):
-        global_elements = scope.global_elements or GlobalElements()
-        subprocess_count = len(scope.subprocesses)
-        activity_count = sum(len(subprocess.activities) for subprocess in scope.subprocesses)
-        st.info(
-            "\n".join(
-                [
-                    f"Estimativa total: {saved_hours} horas economizadas.",
-                    "Componentes considerados:",
-                    f"- leitura, triagem e extração do texto-base: {round(0.6 + (len(global_elements.inputs) + len(global_elements.outputs) + len(global_elements.regulators) + len(global_elements.resources)) * 0.06, 1)} h",
-                    f"- identificação e organização dos componentes estruturados: {round(0.8 + subprocess_count * 0.35 + activity_count * 0.08, 1)} h",
-                    f"- diagramação manual do modelo visual: {round(0.9 + subprocess_count * 0.3 + (len(global_elements.inputs) + len(global_elements.outputs)) * 0.05, 1)} h",
-                    f"- criação e acabamento do PowerPoint: {round(0.7 + subprocess_count * 0.2, 1)} h",
-                    f"- revisão final de reguladores e recursos: {round(0.4 + len(global_elements.regulators) * 0.03 + len(global_elements.resources) * 0.03, 1)} h",
-                    "A estimativa cresce conforme o volume de subprocessos, atividades, entradas, saídas, reguladores e recursos.",
-                ]
-            )
-        )
 
 
 def _split_lines(text: str) -> list[str]:
