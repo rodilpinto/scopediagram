@@ -16,7 +16,7 @@ Leia nesta ordem:
 4. `LESSONS.md` (raiz): skim.
 5. Log recente: `grep -n "^## \[" docs/log.md | head -5` e leia as 2 entradas do topo.
 6. Se o state file estiver raso: o snapshot de memória mais recente listado em
-   `~/.claude/projects/C--Users-P-8106-Documents-solucoes-scopediagram/memory/MEMORY.md`.
+   `~/.claude/projects/<pasta-do-projeto>/memory/MEMORY.md`.
 7. Git: `git log --oneline -3`, `git status --short -b`, `git branch -a`.
 
 Se a tarefa envolver o LLM: `llm_cadeia/README.md` (a pasta é congelada; ver as decisões).

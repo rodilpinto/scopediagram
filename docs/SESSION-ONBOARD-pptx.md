@@ -15,7 +15,7 @@ Ponto de entrada único (a área `pptx` cobre o app inteiro). ≤ 1 página. His
 App Streamlit (`app.py`): extrai um modelo IGOE de texto via LLM (`llm.py` → `ScopeDiagram` em `schema.py`) e gera
 o PowerPoint **preenchendo o template real (SmartArt)**, pacote `templatefill/`. O LLM passa pelo módulo
 compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras → OpenRouter). Remotes: `github`
-(github.com/rodilpinto/scopediagram) e `origin` (git.camara.gov.br/Nuati-SECIN/diagrama-escopo).
+(github.com/rodilpinto/scopediagram) e `origin` (remoto interno; URL em `git remote -v`).
 
 ## 2. Estado na última pausa (2026-09-29)
 **⏸ Em pausa para o framework central** (D-C22/D-C23/D-C24, decididas no buscador; eco e o que bloqueiam em
@@ -37,7 +37,7 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
 - `llm_cadeia/` está **congelada** (D-C24): não editar; defeito vira pedido à sessão do framework. Procedência na
   1ª linha de `llm_cadeia/README.md`. A spec que esse README cita (`docs/superpowers/specs/2026-09-28-llm-cadeia-portatil-design.md`)
   **não existe aqui**: vive no repo buscador-normativos.
-- Da rede da Câmara (PC do trabalho, 28/09) os 4 serviços externos passaram: Gemini, Groq, Cerebras, OpenRouter. O Gemma (`10.10.111.125:1234`) só é alcançável daqui;
+- Da rede da Câmara (PC do trabalho, 28/09) os 4 serviços externos passaram: Gemini, Groq, Cerebras, OpenRouter. O Gemma (servidor local, `LLM_BASE_URL`) só é alcançável daqui;
   no Cloud, sem `LLM_BASE_URL`.
 - Testes locais: `py -3.13 -m pytest tests -q` e `py -3.13 -m pytest llm_cadeia/test_llm_cadeia.py -q` (o `python`
   do PATH é o atalho da Store; use o launcher `py`). Segredos locais em `~/.streamlit/secrets.toml` (fora do repo).

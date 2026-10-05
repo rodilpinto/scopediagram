@@ -6,7 +6,7 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON
 
 # PPTX TODOs: o que está pendente e onde
 
-> Companion snapshot: `~/.claude/projects/C--Users-P-8106-Documents-solucoes-scopediagram/memory/pptx_state_2026-09-29.md`.
+> Companion snapshot: `~/.claude/projects/<pasta-do-projeto>/memory/pptx_state_2026-09-29.md`.
 > Ações que só o Rodrigo pode fazer: `../BLOCKED-ON-RODRIGO.md` (não duplicadas aqui).
 
 ## P0 · Em pausa: passe do framework (D-C22/D-C23/D-C24, eco em `_DECISOES-PENDENTES.md`)

@@ -84,7 +84,7 @@ Lições:
   o Streamlit não acha. Conferir com `ls`.
 - Console do Git Bash mostra `�` em acentos de saída Python: é só a codificação do console
   (`PYTHONIOENCODING=utf-8` resolve), não defeito do LLM.
-- A chave `GEMINI_API_KEY` (nuati.secin, criada em set/2026) recebe 404 em `gemini-2.5-flash` e
+- A chave `GEMINI_API_KEY` (sem sufixo, criada em set/2026) recebe 404 em `gemini-2.5-flash` e
   `gemini-2.5-flash-lite` ("no longer available to new users"). A `main` publicada usa
   `gemini-2.5-flash` por padrão: se o Cloud usar essa chave, é preciso `GEMINI_MODEL` com um modelo 3.x.
 - `painel_llm()` roda antes de `gerar`, então "Última resposta" só aparece na execução seguinte

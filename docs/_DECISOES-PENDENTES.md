@@ -33,7 +33,7 @@ mergear em `main` (a `main` é o que o Streamlit Cloud faz deploy).
 
 **Decisão tomada:** ✅ Opção A — merge direto (o usuário optou por simplicidade em
 vez de PR, após validar o app ao vivo). Testes passaram antes e depois do merge.
-Push feito para os dois remotes configurados (`github` e `origin`/git.camara.gov.br).
+Push feito para os dois remotes configurados (`github` e `origin`, o remoto interno).
 
 ---
 
@@ -73,7 +73,7 @@ e verificado:
 ## D4 — Mergear `feat/llm-cadeia` em `main` (deploy do llm_cadeia)?
 - **Status:** 🟢 DECIDIDA (2026-09-28)
 - **Tipo:** deploy
-- **Onde aparece:** branch `feat/llm-cadeia` (github + git.camara.gov.br); tag de volta `pre-llm-cadeia`
+- **Onde aparece:** branch `feat/llm-cadeia` (github + remoto interno); tag de volta `pre-llm-cadeia`
 
 **A questão.** A branch troca Gemini/OpenAI diretos pela cadeia `llm_cadeia` (verificada ao vivo,
 ver log 2026-09-28). Mergear muda o app publicado: a OpenAI paga sai dos Secrets e vira chave do

@@ -3,9 +3,9 @@
 <!-- Append-only. Mais novas no topo. Formato: Problema / Causa-raiz / Conserto / Regra (+ Cobertura quando o
      conserto é estrutural). Lições específicas do PPTX ficam em docs/SESSION-ONBOARD-pptx.md §3 e docs/log.md. -->
 
-## 2026-09-28 · Credencial do git.camara.gov.br expira: push do `origin` falha com "Authentication failed"
+## 2026-09-28 · Credencial do remoto interno expira: push do `origin` falha com "Authentication failed"
 
-**Problema.** Pushes para `origin` (git.camara.gov.br) falharam 3 vezes em 28-29/09, com o GitHub funcionando.
+**Problema.** Pushes para `origin` (remoto interno) falharam 3 vezes em 28-29/09, com o GitHub funcionando.
 **Causa-raiz.** Credencial HTTPS do Git Credential Manager expira; não é erro de rede nem de permissão.
 **Conserto.** `! git fetch origin` (ou o próprio push) no prompt do Claude Code abre o login; depois disso passa.
 **Regra.** Push que envolve `origin`: se falhar por auth, empurre o GitHub, registre no `BLOCKED-ON-RODRIGO.md` e
@@ -13,7 +13,7 @@ peça o login; nunca contornar trocando credencial ou URL.
 
 ## 2026-09-28 · Chave Gemini nova recebe 404 em `gemini-2.5-flash`
 
-**Problema.** A chave do projeto nuati.secin (criada em set/2026) recebe 404 "no longer available to new users" em
+**Problema.** A chave sem sufixo (`GEMINI_API_KEY`, criada em set/2026) recebe 404 "no longer available to new users" em
 `gemini-2.5-flash` e `gemini-2.5-flash-lite`; o `llm.py` antigo fixava `gemini-2.5-flash`.
 **Causa-raiz.** O Google tirou os 2.5 de chaves novas; chaves antigas ainda funcionam, então o erro só aparece ao
 trocar de chave.

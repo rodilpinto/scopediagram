@@ -18,7 +18,7 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 
 ## Feitos
 
-- 2026-09-29 · Credencial do git.camara renovada: `feat/llm-cadeia` igual no `origin` e no `github` (`f5a08e8`,
+- 2026-09-29 · Credencial do remoto interno renovada: `feat/llm-cadeia` igual no `origin` e no `github` (`f5a08e8`,
   conferido com `git ls-remote`). Se voltar a falhar: `LESSONS.md` 28/09.
 - 2026-09-29 · Autorizou o snapshot de memória do checkpoint (`pptx_state_2026-09-29.md`).
 - 2026-09-28 · Criou `~/.streamlit/secrets.toml` (fora do repo) com as chaves e o Gemma local.
