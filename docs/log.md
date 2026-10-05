@@ -1,5 +1,33 @@
 # PPTX — log (append-only, mais novo no topo)
 
+## [2026-09-29] checkpoint | Handoff da sessão llm_cadeia + pausa do framework
+
+- State file (`SESSION-ONBOARD-pptx.md`) reescrito: estava em 13/07 (branch D3 "não mergeada", secrets.example
+  "pendente"); agora cobre o app inteiro (PPTX + LLM) e a pausa D-C23.
+- Criados na raiz: `BLOCKED-ON-RODRIGO.md` (ações só-humano) e `LESSONS.md` (lições transversais desta e da sessão
+  de 13/07). `_TODO.md` reorganizado (P0 = aguardar o passe do framework); itens velhos de D3 fechados.
+- `_DECISOES-PENDENTES.md`: eco das D-C22/23/24 (fonte: buscador) e marca de "superado" na afirmação da D3 de que
+  não havia PowerPoint nesta máquina.
+- `/onboard-pptx` reescrito (apontava snapshot inexistente e a branch `feature/template-ppt-generation`).
+- Snapshot de memória `pptx_state_2026-09-29.md` (autorizado pelo Rodrigo).
+
+---
+
+## [2026-09-29] pausa | Pausa para o framework (D-C23), branch `feat/llm-cadeia` @ `b972665`
+
+Centralização pedida pela sessão do buscador (decisões D-C22/D-C23/D-C24 em `buscador-normativos/_DECISOES-PENDENTES.md`):
+- **D-C22:** dois ambientes por app: `main` = estável/produção (+ espelho no servidor do Nuati) e `homologacao` =
+  playground. Substitui a proposta de 29/09 desta sessão (`deploy`/`main`), que não foi executada. A migração é feita
+  no passe único da D-C23; aqui nada foi criado, renomeado ou recriado no Streamlit.
+- **D-C23:** origem única do que é comum passa a ser `rodilpinto/nuati-framework`.
+- **D-C24:** `llm_cadeia/` congelada (versão 1.0.1, procedência `buscador-normativos @ 7f1c069`). Não editar; defeito vira
+  pedido à sessão do framework.
+Estado: `main` = `0b5aee1` (merge do llm_cadeia 1.0.1, servida pelo Streamlit Cloud segundo os docs do projeto;
+não conferido em share.streamlit.io). Branch de trabalho `feat/llm-cadeia` = `b972665` + este registro, empurrada nas
+duas remotes. Aguardando o passe do framework.
+
+---
+
 ## [2026-09-28] feat | `llm_cadeia` 1.0.1 recopiado + merge de `feat/llm-cadeia` em `main`
 
 Rodrigo esclareceu que a versão do diagrama de escopo apresentada na reunião é outra: liberado mergear aqui.

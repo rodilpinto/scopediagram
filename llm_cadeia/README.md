@@ -1,4 +1,4 @@
-> Copiado de buscador-normativos @ 98d955e (1.0.1; commit local, push pendente) em 28/09/2026 (sem edições).
+> Copiado de buscador-normativos @ 7f1c069 em 28/09/2026 (versão 1.0.1, sem edições).
 
 # llm_cadeia — LLM com fallback entre provedores (pasta copiável)
 

@@ -6,4 +6,6 @@ diagrama de escopo. A geração do PPTX **preenche o template real de referênci
 `ppt_legacy.py`.
 
 ## Resuming work
-- **pptx** — rode `/onboard-pptx`. Estado: `docs/SESSION-ONBOARD-pptx.md`. Checkpoint com `/checkpoint`.
+- **pptx** (cobre o app inteiro: PPTX + LLM via `llm_cadeia/`) — rode `/onboard-pptx`. Estado:
+  `docs/SESSION-ONBOARD-pptx.md`. Ações só do Rodrigo: `BLOCKED-ON-RODRIGO.md`. Checkpoint com `/checkpoint`.
+- `llm_cadeia/` é cópia congelada de um módulo compartilhado: não editar (ver `docs/_DECISOES-PENDENTES.md`).
