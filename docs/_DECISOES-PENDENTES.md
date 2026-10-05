@@ -86,7 +86,7 @@ chaves gratuitas (sem `LLM_BASE_URL`), e testar uma geração no Cloud logo apó
 
 ---
 
-## D5 — Como este app adota o nuati-framework (passe D-C22/D-C23)
+## D5 · Como este app adota o nuati-framework (passe D-C22/D-C23)
 - **Status:** 🟢 DECIDIDA (2026-10-05, Rodrigo, passo 0 do passe)
 - **Tipo:** escopo / deploy
 
@@ -100,7 +100,7 @@ chaves gratuitas (sem `LLM_BASE_URL`), e testar uma geração no Cloud logo apó
 - 📝 Escolhas minhas (não validadas): tempo economizado sem descontar o tempo da ferramenta (`automatico_min=0`), para
   manter o número de antes; etapas num módulo próprio (`economia.py`), para testar sem Streamlit.
 
-## D6 — URL e branch do app de produção; existe app de teste?
+## D6 · URL e branch do app de produção; existe app de teste?
 - **Status:** 🔴 OPEN (pergunta do passo 0, 05/10)
 - **Tipo:** deploy
 
