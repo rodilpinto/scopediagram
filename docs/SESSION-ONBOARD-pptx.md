@@ -1,7 +1,7 @@
 ---
 title: scopediagram (PPTX + LLM) · session onboarding / state snapshot
 maintained_by: Claude Code sessions; humans can edit too
-last_updated: 2026-09-29
+last_updated: 2026-10-05
 related: [_TODO.md, _DECISOES-PENDENTES.md, log.md, ../BLOCKED-ON-RODRIGO.md, ../LESSONS.md]
 ---
 
@@ -17,26 +17,23 @@ o PowerPoint **preenchendo o template real (SmartArt)**, pacote `templatefill/`.
 compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras → OpenRouter). Remotes: `github`
 (github.com/rodilpinto/scopediagram) e `origin` (remoto interno; URL em `git remote -v`).
 
-## 2. Estado na última pausa (2026-09-29)
-**⏸ Em pausa para o framework central** (D-C22/D-C23/D-C24, decididas no buscador; eco e o que bloqueiam em
-`_DECISOES-PENDENTES.md`). O próximo trabalho neste app é o passe único que vem da sessão do framework.
-- **`main` = `0b5aee1`** (merge do `llm_cadeia` 1.0.1, D4). Os docs dizem que o Streamlit Cloud serve a `main`;
-  **não conferido** no painel, e **nenhuma geração no Cloud foi verificada** (ver `BLOCKED-ON-RODRIGO.md`).
-- **Branch de trabalho `feat/llm-cadeia`**: à frente da `main` só com docs (procedência 7f1c069, log, este
-  checkpoint). Igual no `github` e no `origin` (`git ls-remote`); se o push do `origin` falhar por auth, `LESSONS.md`.
-  Esta sessão: `bc75099` → `7a2c6ba` → `b972665` → `9d52dc5` → commit do checkpoint. ⚠ O SHA mais novo listado
-  aqui está sempre um atrás do commit que gravou este arquivo; a cadeia real termina em `git log --oneline -3`.
-- **Retorno:** tag `pre-llm-cadeia` ("antes do llm_cadeia", = `6083a90`): `git checkout pre-llm-cadeia`.
-- **Working tree:** arquivos não rastreados do usuário (`git status --short`: 2 `.pptx` na raiz e
-  `.claude/settings.local.json`), intocados de propósito; não são necessários para retomar.
-- **Verificado ao vivo (28/09, rede da Câmara):** Gemma `google/gemma-4` com `sistema=`+`json=True`; extração IGOE
-  via Gemma e via Gemini passando no pydantic; app gerando com "Última resposta: local (google/gemma-4)" sem
-  `st.rerun()`. **Assumido/não verificado:** repetição `max_completion_tokens` da OpenAI (só dublê).
+## 2. Estado na última pausa (2026-10-05)
+**Passe do nuati-framework em andamento** (D5; log 05/10). Feito: tudo do lado do código. Falta: o passo do Streamlit
+(Rodrigo), a conferência no ar, a promoção para `main` e a limpeza.
+- **`homologacao` = `67beb1b`** nos dois remotos: `main` + merge de `feat/llm-cadeia` + `llm_cadeia` 1.1.0,
+  `pptx_opc` 1.0.0, `tempo_economizado` 1.0.0, `branding` 1.0.0 (pastas com a árvore git idêntica à v0.1.0) + dado
+  interno fora dos arquivos versionados. Conferida no app local (log 05/10), **ainda não no ar**.
+- **`main` = `0b5aee1`** (produção, sem o framework). URL do app de produção: **pendente (D6)**.
+- `feat/llm-cadeia` = `265f48a`: fica até o ok do Rodrigo com os dois apps no ar (depois, apagar).
+- **Retorno:** tags anotadas `pre-framework-2026-10-05-main` e `pre-framework-2026-10-05-feat-llm-cadeia` (e a
+  antiga `pre-llm-cadeia`).
+- **Working tree:** arquivos não rastreados do usuário (2 `.pptx` na raiz e `.claude/settings.local.json`), intocados
+  de propósito.
 
 ## 3. Achados críticos (não perder)
-- `llm_cadeia/` está **congelada** (D-C24): não editar; defeito vira pedido à sessão do framework. Procedência na
-  1ª linha de `llm_cadeia/README.md`. A spec que esse README cita (`docs/superpowers/specs/2026-09-28-llm-cadeia-portatil-design.md`)
-  **não existe aqui**: vive no repo buscador-normativos.
+- Pastas do framework (`llm_cadeia/`, `pptx_opc/`, `tempo_economizado/`, `branding/`): não editar; defeito vira
+  pedido ao `nuati-framework`. Procedência só no registro de cópias do framework (README §4), nunca na pasta.
+  O que é do app fica fora delas: etapas do tempo economizado em `economia.py`, tema em `.streamlit/config.toml`.
 - Da rede da Câmara (PC do trabalho, 28/09) os 4 serviços externos passaram: Gemini, Groq, Cerebras, OpenRouter. O Gemma (servidor local, `LLM_BASE_URL`) só é alcançável daqui;
   no Cloud, sem `LLM_BASE_URL`.
 - Testes locais: `py -3.13 -m pytest tests -q` e `py -3.13 -m pytest llm_cadeia/test_llm_cadeia.py -q` (o `python`
@@ -49,12 +46,12 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
   PyMuPDF.
 
 ## 4. Disciplina
-Um chunk por vez → verificar → atualizar durables → commit → `/checkpoint`. Push só da branch de trabalho, nunca
-da `main` sem ok do Rodrigo.
+Um chunk por vez → verificar → atualizar durables → commit → `/checkpoint`. Trabalho em `homologacao`; push na `main` só com ok do
+Rodrigo (promoção).
 
 ## 5. Próximo movimento (recomendação)
-1. Aguardar o passe do framework (D-C23); não começar feature nova aqui antes dele.
-2. Enquanto isso, só o que está em `../BLOCKED-ON-RODRIGO.md` (ações do Rodrigo).
+1. D6 (URL do app de produção) e o passo do Streamlit, ambos em `../BLOCKED-ON-RODRIGO.md`.
+2. Conferir os dois apps no ar e seguir o P0 de `_TODO.md` (promoção, limpeza, registro no framework).
 
 ## 6. Ponteiros
 | Doc | Propósito |

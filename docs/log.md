@@ -1,5 +1,32 @@
 # PPTX — log (append-only, mais novo no topo)
 
+## [2026-10-05] feat | Passe do nuati-framework (D-C22/D-C23), framework @ v0.1.0 (`ab3fa66`)
+
+Decisões do Rodrigo no passo 0 (05/10): mapeamento `main` = produção (sem mudança até a promoção) e `homologacao` =
+`main` + merge de `feat/llm-cadeia` + framework; branding com rodapé **só da marca** (`rodape(unidades=())`);
+**sem** `extracao_texto` (o `input_parser.py` com `pypdf` fica); dado interno sai dos `.example` e dos docs, sem
+reescrever o histórico. ⚠ A URL do app de produção do scopediagram ainda não foi informada (a resposta veio com a
+do DOU-clipping).
+- Tags de volta (anotadas, nos dois remotos): `pre-framework-2026-10-05-main` (`0b5aee1`) e
+  `pre-framework-2026-10-05-feat-llm-cadeia` (`265f48a`).
+- Linha de base (`feat/llm-cadeia`, requirements instalados): app 19 passam; `llm_cadeia` 1.0.1 23 passam. PPTX do
+  exemplo fixo (`tests/test_generation._sample(3)`) renderizado no PowerPoint: 5 PNGs.
+- `homologacao` = `de34e02` (merge) + um commit por recurso, todas as pastas com a árvore git idêntica à da v0.1.0:
+  `llm_cadeia` 1.1.0 (`28386b1`), `pptx_opc` 1.0.0 (`514d71c`), `tempo_economizado` 1.0.0 (`22ee8e5`, etapas em
+  `economia.py`, mesmo número da conta antiga, 5 testes novos), `branding` 1.0.0 (`e4278bc`); dado interno
+  (`67beb1b`).
+- Testes depois: app 24; `llm_cadeia` 31; `pptx_opc` 9 + 1 pulado (10/10 com `NUATI_TESTE_POWERPOINT=1`);
+  `tempo_economizado` 31; `branding` 15.
+- pptx_opc: o mesmo exemplo renderizado com `python -m pptx_opc.render_powerpoint` deu 5/5 PNGs iguais pixel a pixel
+  aos da linha de base. Primeira vez que o `pptx_opc` roda dentro de um app.
+- Ao vivo (PC do trabalho): `python -m llm_cadeia` com todos os provedores configurados respondendo em ao menos um
+  modelo; extração real pelo `llm.extract_scope` e pelo app local (porta 8531): "Última resposta: local
+  (google/gemma-4)", PPTX gerado e aberto no PowerPoint, "Tempo de trabalho manual poupado: cerca de 7h42min",
+  cabeçalho, título da aba e logo no rodapé.
+- Próximo: passo do Streamlit (Rodrigo) e conferência no ar; ver `BLOCKED-ON-RODRIGO.md`.
+
+---
+
 ## [2026-09-29] checkpoint | Handoff da sessão llm_cadeia + pausa do framework
 
 - State file (`SESSION-ONBOARD-pptx.md`) reescrito: estava em 13/07 (branch D3 "não mergeada", secrets.example

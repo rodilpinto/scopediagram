@@ -1,7 +1,7 @@
 ---
 title: "Decisões abertas — ledger consolidado (PPTX)"
 maintained_by: Claude Code sessions; só Rodrigo resolve
-last_updated: 2026-09-29
+last_updated: 2026-10-05
 related: [_TODO.md, SESSION-ONBOARD-pptx.md, log.md]
 ---
 
@@ -83,6 +83,30 @@ usuário; o Gemini deixa de receber `response_json_schema`; os modelos passam a 
 chaves gratuitas (sem `LLM_BASE_URL`), e testar uma geração no Cloud logo após o Reboot.
 
 **Decisão tomada:** ✅ Rodrigo autorizou o merge + push em 28/09 (a versão da reunião é outra).
+
+---
+
+## D5 — Como este app adota o nuati-framework (passe D-C22/D-C23)
+- **Status:** 🟢 DECIDIDA (2026-10-05, Rodrigo, passo 0 do passe)
+- **Tipo:** escopo / deploy
+
+**Decisão tomada:**
+- **(b) Branches:** `main` continua sendo a produção; `homologacao` = `main` + merge de `feat/llm-cadeia` + framework
+  (promoção futura por fast-forward). O framework vai para a produção depois da conferência no ar, com o ok dele.
+- **(c) Branding:** sim, rodapé **só com a marca** (`cd_brand.rodape(unidades=())`): app público (MIV p.14; F-A10 do
+  framework). Ficam "Feito por Rodrigo Pinto" e a versão.
+- **(d) extracao_texto:** não adotar ("não precisa"); `input_parser.py` (pypdf) fica.
+- **(e) Dado interno:** sai dos `.example` e dos docs; o histórico não é reescrito.
+- 📝 Escolhas minhas (não validadas): tempo economizado sem descontar o tempo da ferramenta (`automatico_min=0`), para
+  manter o número de antes; etapas num módulo próprio (`economia.py`), para testar sem Streamlit.
+
+## D6 — URL e branch do app de produção; existe app de teste?
+- **Status:** 🔴 OPEN (pergunta do passo 0, 05/10)
+- **Tipo:** deploy
+
+A resposta de 05/10 trouxe a do DOU-clipping (`dou-clipping-app.streamlit.app`, `master`), não a deste app. Sem a
+URL do scopediagram, o passo do Streamlit (apagar e recriar a produção na `main`, criar a homologação) não pode ser
+entregue com os endereços certos.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: PPTX TODOs (persistent, version-controlled)
-last_audit: 2026-09-29
+last_audit: 2026-10-05
 related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON-RODRIGO.md, ../LESSONS.md]
 ---
 
@@ -9,15 +9,17 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON
 > Companion snapshot: `~/.claude/projects/<pasta-do-projeto>/memory/pptx_state_2026-09-29.md`.
 > Ações que só o Rodrigo pode fazer: `../BLOCKED-ON-RODRIGO.md` (não duplicadas aqui).
 
-## P0 · Em pausa: passe do framework (D-C22/D-C23/D-C24, eco em `_DECISOES-PENDENTES.md`)
-- [ ] **Aguardar o passe único deste app** vindo da sessão do framework (`rodilpinto/nuati-framework`): adotar o
-  framework **e** migrar para `main` (produção) / `homologacao` (playground), recriando os apps no Streamlit.
-  Até lá: não criar/renomear branches, não recriar apps, não editar `llm_cadeia/`, não fazer push na `main`.
-- [ ] No passe: levar o commit de trabalho pendente (`feat/llm-cadeia`, 2 commits só de docs à frente da `main`)
-  para a branch certa, e apagar `feat/llm-cadeia` só depois dos apps novos conferidos no ar (ordem da D-C22).
-- [ ] Pedido à sessão do framework (D-C24): o README do `llm_cadeia` cita uma spec que só existe no buscador;
-  na cópia, apontar o repo de origem (achado do dogfood de 29/09).
-- [ ] No passe: rodapé "Versão 1.0" fixo em `app.py` (`_render_efficiency_footer`) passa a vir da tag/framework.
+## P0 · Passe do framework (D5): falta o Streamlit e a conferência no ar
+- [x] Tags de volta, linha de base, `homologacao` com `llm_cadeia` 1.1.0, `pptx_opc`, `tempo_economizado`, `branding`
+  e dado interno fora dos arquivos versionados (log 05/10).
+- [ ] D6: URL do app de produção, branch que ele segue e se há app de teste (Rodrigo).
+- [ ] Rodrigo: passo do Streamlit (`BLOCKED-ON-RODRIGO.md`).
+- [ ] Conferir no ar, feature por feature: produção igual a antes; homologação com cadeia na barra lateral,
+  extração, PPTX baixando e abrindo, tempo economizado, branding.
+- [ ] Com o ok: promover `homologacao` → `main` (fast-forward) com tag de versão do app; push nos dois remotos.
+- [ ] Com novo ok: `main` padrão no GitHub; apagar `feat/llm-cadeia` (e apps de teste antigos, se houver).
+- [ ] Registro de cópias no nuati-framework (README §4, linhas do scopediagram).
+- [ ] Rodapé "Versão 1.0" fixo em `app.py`: passar a vir da tag de versão do app (na promoção).
 
 ## P1 · Concluído recentemente
 - [x] Adotar o `llm_cadeia` (Gemini/OpenAI diretos → `gerar`), verificado ao vivo na rede da Câmara (Gemma local,
@@ -32,6 +34,9 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON
   `f2e55aa`, `55d87ea`, `2b912ea`, `5e9d1b7`; merge em `main` 2026-07-08 (D1/D2).
 
 ## P2 / P3 · Depois / nice-to-have
+- [ ] **Rótulo "SUBPROCESSOS" quebrado** no slide 2 (o texto vertical quebra em 3 colunas e passa por cima dos itens):
+  visto no render do PowerPoint da linha de base de 05/10, **antes** do passe (defeito antigo, não causado por ele).
+- [ ] `app.py` usa `use_container_width` (o Streamlit 1.64 avisa: trocar por `width="stretch"`/`"content"`).
 - [ ] Verificar ao vivo a OpenAI paga via "Outro" (hoje só dublê): depende de chave (ver `BLOCKED-ON-RODRIGO.md`);
   resultado vai para a sessão do framework (D-C24).
 - [ ] **Auto-fit nas BANDAS** (REGULADORES/RECURSOS/OBJETIVO): hoje só as lanes têm. Reavaliar se aparecer overflow.

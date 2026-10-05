@@ -3,6 +3,25 @@
 <!-- Append-only. Mais novas no topo. Formato: Problema / Causa-raiz / Conserto / Regra (+ Cobertura quando o
      conserto é estrutural). Lições específicas do PPTX ficam em docs/SESSION-ONBOARD-pptx.md §3 e docs/log.md. -->
 
+## 2026-10-05 · Comparar PPTX gerados: pelos PNGs do PowerPoint, não pelos bytes
+
+**Problema.** Duas gerações do mesmo exemplo dão `.pptx` com bytes e tamanho diferentes (o zip não é determinístico),
+o que impede provar "nada mudou" por hash do arquivo.
+**Causa-raiz.** Metadados do zip variam a cada `to_bytes`; o conteúdo renderizado não.
+**Conserto.** Renderizar os dois com `python -m pptx_opc.render_powerpoint` e comparar os PNGs pixel a pixel
+(PIL `ImageChops.difference(...).getbbox() is None`). Duas gerações seguidas deram 5/5 iguais, então a comparação
+não tem ruído (passe do framework, 05/10).
+**Regra.** QA de "mesmo resultado" no PPTX = PNGs do PowerPoint iguais, com uma dupla de controle antes.
+
+## 2026-10-05 · O Playwright MCP grava snapshots e prints dentro do repo (`.playwright-mcp/`)
+
+**Problema.** Ao conferir o app local pelo navegador, apareceu a pasta `.playwright-mcp/` (snapshots, log do console,
+prints) na raiz do repo, sem ser ignorada pelo git. O print de página inteira também não pega a área abaixo da dobra
+(o Streamlit rola dentro de um contêiner).
+**Conserto.** Salvar prints com caminho relativo em `.playwright-mcp/`, mover o que importa para fora e apagar a
+pasta antes do `git add`; para ler a página inteira, usar o snapshot de acessibilidade.
+**Regra.** Depois de usar o navegador, `git status --short` antes de qualquer commit.
+
 ## 2026-09-28 · Credencial do remoto interno expira: push do `origin` falha com "Authentication failed"
 
 **Problema.** Pushes para `origin` (remoto interno) falharam 3 vezes em 28-29/09, com o GitHub funcionando.
