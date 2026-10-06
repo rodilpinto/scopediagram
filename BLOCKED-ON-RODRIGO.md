@@ -5,8 +5,8 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 
 ## Abertos
 
-- 🔴 **Ok para promover `homologacao` → `main`** (passo 9), depois de ver os dois apps no ar (log 06/10). Junto:
-  o nome da tag de versão do app e se o rodapé passa a mostrar essa versão.
+- 🔴 **Confirmar a remoção de `feat/llm-cadeia`** (GitHub, interno e local). Está contida na `main`; nada se perde.
+- 🟡 **Gitea interno: branch padrão `main`** (na tela do `diagrama-escopo`, se ainda não for).
 - 🟡 **URL antiga `diagramadeescopo.streamlit.app` deixou de existir** (06/10): links já divulgados quebram. Avisar
   quem usa, ou criar um app nessa URL (Streamlit não redireciona).
 - 🟡 **Existe app de teste antigo do scopediagram?** Se sim, apagar só depois do ok final.
@@ -16,6 +16,7 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 
 ## Feitos
 
+- 2026-10-06 · Autorizou a promoção (`v1.1.0`) e pediu a versão do app no rodapé de todos os apps (D7, F-A14).
 - 2026-10-06 · Recriou a produção (`diagrama-escopo`, `main`) e criou a homologação
   (`diagrama-escopo-homologacao`, `homologacao`), com os Secrets e Reboot.
 - 2026-10-05 · Decidiu o passe do framework (D5): mapeamento de branches, rodapé só com a marca, sem

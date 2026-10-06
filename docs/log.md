@@ -1,5 +1,20 @@
 # PPTX — log (append-only, mais novo no topo)
 
+## [2026-10-06] release | v1.1.0: framework na produção + versão do app no rodapé
+
+- Pedido do Rodrigo (06/10): versão do app no rodapé, sempre visível. `VERSAO_APP = "1.1.0"` em `app.py`; a linha
+  "Feito por Rodrigo Pinto · Versão 1.1.0" foi para o fim da página, junto do logo (`a4acec5`). Conferida no ar na
+  homologação antes da promoção.
+- Promoção com o ok do Rodrigo: `main` = `homologacao` = `a4acec5` (fast-forward), tag anotada `v1.1.0`, nos dois
+  remotos (`git ls-remote`). Produção `diagrama-escopo` conferida no ar: cabeçalho e logo do branding, cadeia,
+  "Última resposta: gemini (gemini-3.5-flash-lite)", "Baixar PowerPoint", "cerca de 4h01min", "Versão 1.1.0".
+- Registro de cópias no `nuati-framework` (`homologacao` @ `bc24c61`, GitHub e `camara`): linhas do scopediagram,
+  F-A14 (versão do app no rodapé em todos os apps: regra no `PASSE-POR-APP.md` e na promoção), evidência na F-A10.
+- Branch padrão do GitHub já era `main`. `feat/llm-cadeia` (`265f48a`) está contida na `main`; apagar só com a
+  confirmação do Rodrigo.
+
+---
+
 ## [2026-10-06] verificação | Apps recriados no Streamlit e conferidos no ar
 
 O Rodrigo recriou os apps (06/10): produção **`diagrama-escopo.streamlit.app`** (branch `main`) e homologação

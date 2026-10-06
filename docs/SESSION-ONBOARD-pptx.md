@@ -1,7 +1,7 @@
 ---
 title: scopediagram (PPTX + LLM) · session onboarding / state snapshot
 maintained_by: Claude Code sessions; humans can edit too
-last_updated: 2026-10-05
+last_updated: 2026-10-06
 related: [_TODO.md, _DECISOES-PENDENTES.md, log.md, ../BLOCKED-ON-RODRIGO.md, ../LESSONS.md]
 ---
 
@@ -17,19 +17,18 @@ o PowerPoint **preenchendo o template real (SmartArt)**, pacote `templatefill/`.
 compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras → OpenRouter). Remotes: `github`
 (github.com/rodilpinto/scopediagram) e `origin` (remoto interno; URL em `git remote -v`).
 
-## 2. Estado na última pausa (2026-10-05)
-**Passe do nuati-framework em andamento** (D5; log 05/10). Feito: tudo do lado do código. Falta: o passo do Streamlit
-(Rodrigo), a conferência no ar, a promoção para `main` e a limpeza.
-- **`homologacao` = `67beb1b`** nos dois remotos: `main` + merge de `feat/llm-cadeia` + `llm_cadeia` 1.1.0,
-  `pptx_opc` 1.0.0, `tempo_economizado` 1.0.0, `branding` 1.0.0 (pastas com a árvore git idêntica à v0.1.0) + dado
-  interno fora dos arquivos versionados. Conferida no app local (05/10) e no ar (06/10).
-- **`main` = `0b5aee1`** (produção, sem o framework): `diagrama-escopo.streamlit.app`. Homologação:
-  `diagrama-escopo-homologacao.streamlit.app`. Os dois conferidos no ar em 06/10 (log).
-- `feat/llm-cadeia` = `265f48a`: fica até o ok do Rodrigo com os dois apps no ar (depois, apagar).
-- **Retorno:** tags anotadas `pre-framework-2026-10-05-main` e `pre-framework-2026-10-05-feat-llm-cadeia` (e a
-  antiga `pre-llm-cadeia`).
-- **Working tree:** arquivos não rastreados do usuário (2 `.pptx` na raiz e `.claude/settings.local.json`), intocados
-  de propósito.
+## 2. Estado na última pausa (2026-10-06)
+**Passe do nuati-framework concluído** (D5/D7; log 05-06/10), falta só a limpeza (apagar `feat/llm-cadeia`).
+- **`main` = `a4acec5` = tag `v1.1.0`** (produção, `diagrama-escopo.streamlit.app`), com `llm_cadeia` 1.1.0,
+  `pptx_opc` 1.0.0, `tempo_economizado` 1.0.0 e `branding` 1.0.0 (pastas com a árvore git idêntica à do framework
+  v0.1.0) e "Versão 1.1.0" no rodapé. Conferida no ar em 06/10.
+- **`homologacao`** (trabalho do dia a dia, `diagrama-escopo-homologacao.streamlit.app`): igual à `main` mais commits
+  de journal. A URL antiga `diagramadeescopo.streamlit.app` não existe mais.
+- **Promover:** trocar `VERSAO_APP` em `app.py`, `git switch main && git merge --ff-only homologacao`,
+  `git tag -a vX.Y.Z`, push de `main` e da tag nos dois remotos; só com ok do Rodrigo.
+- **Retorno:** tags anotadas `pre-framework-2026-10-05-main` e `pre-framework-2026-10-05-feat-llm-cadeia`; voltar a
+  `main` por `git revert`, nunca por push forçado.
+- **Working tree:** arquivos não rastreados do usuário (2 `.pptx` na raiz e `.claude/settings.local.json`), intocados.
 
 ## 3. Achados críticos (não perder)
 - Pastas do framework (`llm_cadeia/`, `pptx_opc/`, `tempo_economizado/`, `branding/`): não editar; defeito vira
@@ -51,8 +50,8 @@ Um chunk por vez → verificar → atualizar durables → commit → `/checkpoin
 Rodrigo (promoção).
 
 ## 5. Próximo movimento (recomendação)
-1. Ok do Rodrigo para a promoção (`../BLOCKED-ON-RODRIGO.md`).
-2. Conferir os dois apps no ar e seguir o P0 de `_TODO.md` (promoção, limpeza, registro no framework).
+1. Com a confirmação do Rodrigo: apagar `feat/llm-cadeia` (`../BLOCKED-ON-RODRIGO.md`).
+2. Trabalho novo em `homologacao`; P2 de `_TODO.md` (rótulo SUBPROCESSOS, `use_container_width`).
 
 ## 6. Ponteiros
 | Doc | Propósito |

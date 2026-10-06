@@ -9,16 +9,18 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON
 > Companion snapshot: `~/.claude/projects/<pasta-do-projeto>/memory/pptx_state_2026-09-29.md`.
 > Ações que só o Rodrigo pode fazer: `../BLOCKED-ON-RODRIGO.md` (não duplicadas aqui).
 
-## P0 · Passe do framework (D5): falta o Streamlit e a conferência no ar
+## P0 · Passe do framework (D5/D7): falta só a limpeza
 - [x] Tags de volta, linha de base, `homologacao` com `llm_cadeia` 1.1.0, `pptx_opc`, `tempo_economizado`, `branding`
   e dado interno fora dos arquivos versionados (log 05/10).
 - [x] D6 e passo do Streamlit (Rodrigo, 06/10): `diagrama-escopo` (`main`) e `diagrama-escopo-homologacao`.
 - [x] Conferir no ar, feature por feature: produção igual a antes; homologação com cadeia na barra lateral,
   extração, PPTX baixando e abrindo, tempo economizado, branding.
-- [ ] Com o ok: promover `homologacao` → `main` (fast-forward) com tag de versão do app; push nos dois remotos.
-- [ ] Com novo ok: `main` padrão no GitHub; apagar `feat/llm-cadeia` (e apps de teste antigos, se houver).
-- [ ] Registro de cópias no nuati-framework (README §4, linhas do scopediagram).
-- [ ] Rodapé "Versão 1.0" fixo em `app.py`: passar a vir da tag de versão do app (na promoção).
+- [x] Promovido com o ok: `main` = `a4acec5` = `v1.1.0`, nos dois remotos; produção conferida no ar (06/10).
+- [x] `main` já é a padrão no GitHub.
+- [ ] Com nova confirmação do Rodrigo: apagar `feat/llm-cadeia` nos dois remotos e local (contida na `main`).
+- [ ] Rodrigo: trocar a branch padrão do Gitea interno para `main`, na tela (se ainda não for).
+- [x] Registro de cópias no nuati-framework (`homologacao` @ `bc24c61`) + F-A14.
+- [x] Versão do app no rodapé (`VERSAO_APP`, D7). A cada promoção: trocar `VERSAO_APP` e criar a tag igual.
 
 ## P1 · Concluído recentemente
 - [x] Adotar o `llm_cadeia` (Gemini/OpenAI diretos → `gerar`), verificado ao vivo na rede da Câmara (Gemma local,

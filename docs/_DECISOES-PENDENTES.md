@@ -112,6 +112,16 @@ entregue com os endereços certos.
 
 ---
 
+## D7 · Versão do app no rodapé e promoção v1.1.0
+- **Status:** 🟢 DECIDIDA (2026-10-06, Rodrigo: "pode prosseguir. e vamos colocar as versões dos apps no footer.
+  pode propagar isso para os outros onboards dos outros apps tb")
+- **Decisão tomada:** promover `homologacao` → `main` como `v1.1.0`; a versão do app (`VERSAO_APP` em `app.py`) fica
+  sempre visível no rodapé e é trocada junto com a tag a cada promoção. Propagado para o framework como F-A14.
+- 📝 Escolhas minhas: nome da tag `v1.1.0` (seguindo o "Versão 1.0" anterior); a linha de autoria e versão fora do
+  bloco que só aparece depois de gerar.
+
+---
+
 ## Decisões de outro repo que valem para este app (eco; a fonte manda)
 
 Fonte: `github.com/rodilpinto/buscador-normativos`, arquivo `_DECISOES-PENDENTES.md`, seção
