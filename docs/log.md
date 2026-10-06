@@ -1,5 +1,15 @@
 # PPTX — log (append-only, mais novo no topo)
 
+## [2026-10-06] verificação | Produção antes da recriação (`diagramadeescopo.streamlit.app`)
+
+URL da produção informada pelo Rodrigo (06/10). Visto no ar, antes do passo do Streamlit: barra lateral com a cadeia
+(gemini, gemini-2, groq-2, cerebras-2, openrouter-2; sem `local`, então os Secrets de lá não têm `LLM_BASE_URL`);
+uma geração curta respondida por `gemini (gemini-3.5-flash-lite)`, "Baixar PowerPoint" presente, rodapé "Feito por
+Rodrigo Pinto", "Versão 1.0", "Economia estimada: 4.0 horas" e o toggle antigo. Primeira geração no Cloud verificada
+desde o merge do `llm_cadeia` (28/09). Esta é a referência para "produção igual a antes".
+
+---
+
 ## [2026-10-05] feat | Passe do nuati-framework (D-C22/D-C23), framework @ v0.1.0 (`ab3fa66`)
 
 Decisões do Rodrigo no passo 0 (05/10): mapeamento `main` = produção (sem mudança até a promoção) e `homologacao` =

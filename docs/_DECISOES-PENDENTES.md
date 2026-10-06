@@ -101,7 +101,8 @@ chaves gratuitas (sem `LLM_BASE_URL`), e testar uma geração no Cloud logo apó
   manter o número de antes; etapas num módulo próprio (`economia.py`), para testar sem Streamlit.
 
 ## D6 · URL e branch do app de produção; existe app de teste?
-- **Status:** 🔴 OPEN (pergunta do passo 0, 05/10)
+- **Status:** 🟡 EM ANÁLISE: URL informada em 06/10, `https://diagramadeescopo.streamlit.app/`;
+  branch e app de teste ainda não confirmados (o código no ar é o de `main` = `feat/llm-cadeia`, que só diferem em docs)
 - **Tipo:** deploy
 
 A resposta de 05/10 trouxe a do DOU-clipping (`dou-clipping-app.streamlit.app`, `master`), não a deste app. Sem a

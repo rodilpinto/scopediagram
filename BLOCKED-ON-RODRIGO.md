@@ -5,13 +5,13 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 
 ## Abertos
 
-- 🔴 **D6: URL do app de produção do scopediagram, branch que ele segue e se há app de teste.** A resposta de 05/10
-  veio com a do DOU-clipping. Destrava: o passo do Streamlit abaixo, com os endereços certos.
+- 🟡 **D6: branch que `diagramadeescopo.streamlit.app` segue e se há app de teste** (URL informada em 06/10).
+  Não trava o passo abaixo: a produção será recriada na `main` de qualquer forma.
 - 🔴 **Passo do Streamlit do passe do framework** (receita §3, passo 5, do `nuati-framework`), depois da D6:
   1. no app de produção, copiar o texto dos Secrets (guardar fora do navegador);
-  2. apagar o app de produção e recriá-lo com a **mesma URL** na branch `main` (se não aparecer na lista, digitar);
+  2. apagar o app de produção (`diagramadeescopo`) e recriá-lo com a **mesma URL** na branch `main` (se não aparecer na lista, digitar);
      colar os Secrets e clicar **Reboot app**;
-  3. criar o app de homologação (sugestão: `<url-de-produção>-homologacao`) na branch `homologacao`; colar os mesmos
+  3. criar o app de homologação (sugestão: `diagramadeescopo-homologacao`) na branch `homologacao`; colar os mesmos
      Secrets e **Reboot app**;
   4. avisar a sessão para a conferência no ar. Apps de teste antigos só são apagados depois do ok com os dois no ar.
 - 🟢 **Chave OpenAI para verificar ao vivo** a repetição com `max_completion_tokens` (modelos de raciocínio via
