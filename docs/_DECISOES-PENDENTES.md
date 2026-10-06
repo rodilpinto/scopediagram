@@ -1,7 +1,7 @@
 ---
 title: "Decisões: ledger consolidado (scopediagram)"
 maintained_by: Claude Code sessions; só Rodrigo resolve
-last_updated: 2026-10-05
+last_updated: 2026-10-06
 related: [_TODO.md, SESSION-ONBOARD-scopediagram.md, log.md]
 ---
 

@@ -24,8 +24,11 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
   v0.1.0) e "Versão 1.1.0" no rodapé. Conferida no ar em 06/10.
 - **`homologacao`** (trabalho do dia a dia, `diagrama-escopo-homologacao.streamlit.app`): igual à `main` mais commits
   de journal. A URL antiga `diagramadeescopo.streamlit.app` não existe mais.
-- **Promover:** trocar `VERSAO_APP` em `app.py`, `git switch main && git merge --ff-only homologacao`,
-  `git tag -a vX.Y.Z`, push de `main` e da tag nos dois remotos; só com ok do Rodrigo.
+- **Promover** (só com ok do Rodrigo): (1) em `homologacao`, trocar `VERSAO_APP` em `app.py`, testar, commit e push
+  nos dois remotos; (2) conferir o app de homologação no ar (rodapé com a versão nova, uma geração); (3)
+  `git switch main && git merge --ff-only homologacao`; (4) `git tag -a vX.Y.Z -m "vX.Y.Z: <o que mudou>"`;
+  (5) `git push github main vX.Y.Z` e `git push origin main vX.Y.Z`, conferir com `git ls-remote`; (6) conferir a
+  produção no ar; (7) `git switch homologacao`. Exemplo real: entrada de 06/10 do `log.md` (v1.1.0).
 - **Retorno:** tags anotadas `pre-framework-2026-10-05-main` e `pre-framework-2026-10-05-feat-llm-cadeia`; voltar a
   `main` por `git revert`, nunca por push forçado.
 - **Working tree:** arquivos não rastreados do usuário (2 `.pptx` na raiz e `.claude/settings.local.json`), intocados.
@@ -36,12 +39,15 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
 
 ## 3. Achados críticos (não perder)
 - Pastas do framework (`llm_cadeia/`, `pptx_opc/`, `tempo_economizado/`, `branding/`): não editar; defeito vira
-  pedido ao `nuati-framework`. Procedência só no registro de cópias do framework (README §4), nunca na pasta.
+  pedido ao `nuati-framework`. Recopiar o recurso X da ref R: comparar a cópia por hash git com a versão que ela diz
+  ter; `git -C ../nuati-framework fetch -q origin --tags`; `git rm -r -q X && git -C ../nuati-framework archive R X | tar -x -f - && git add X`; conferir
+  `git rev-parse HEAD:X` contra `git -C ../nuati-framework rev-parse R:X` depois do commit; testes; commit
+  "adota X <versão> (nuati-framework @ R)"; atualizar as linhas do app no README §4 do framework. Procedência só no registro de cópias do framework (README §4), nunca na pasta.
   O que é do app fica fora delas: etapas do tempo economizado em `economia.py`, tema em `.streamlit/config.toml`.
 - Da rede da Câmara (PC do trabalho, 28/09) os 4 serviços externos passaram: Gemini, Groq, Cerebras, OpenRouter. O Gemma (servidor local, `LLM_BASE_URL`) só é alcançável daqui;
   no Cloud, sem `LLM_BASE_URL`.
-- Testes locais: `py -3.13 -m pytest tests llm_cadeia pptx_opc tempo_economizado branding -q` (o `python` do PATH
-  é o atalho da Store; use o launcher `py`). O render do `pptx_opc` só roda com `NUATI_TESTE_POWERPOINT=1`. Segredos locais em `~/.streamlit/secrets.toml` (fora do repo).
+- Testes locais: `LLM_SOMENTE=nenhum py -3.13 -m pytest tests llm_cadeia pptx_opc tempo_economizado branding -q`
+  (`LLM_SOMENTE=nenhum` garante que nada chame LLM de verdade; o `python` do PATH é o atalho da Store, use o `py`). O render do `pptx_opc` só roda com `NUATI_TESTE_POWERPOINT=1`. Segredos locais em `~/.streamlit/secrets.toml` (fora do repo).
 - Porta 8502 pode estar ocupada pelo app de Checklist; suba o scopediagram em outra (`--server.port 8531`).
 - PPTX: template é **SmartArt**; `python-pptx` não o edita → `templatefill/` mexe no XML (zip + lxml). O LibreOffice
   **não** regenera SmartArt; o `drawingN.xml` em cache é obrigatório. Cada lane = 1 `dsp:sp` com N parágrafos; no
@@ -69,6 +75,7 @@ Rodrigo (promoção).
 | `superpowers/specs/2026-07-08-smartart-data-model-editability-design.md` | editabilidade do SmartArt (D3) |
 | `../templatefill/{igoe,builder}.py` · `../pptx_opc/` (OPC + render, do framework) | motor PPTX · QA via PowerPoint |
 | `../economia.py` · `../tools/qa_*.py` | etapas do tempo economizado · scripts de QA (receita no docstring) |
+| `../../nuati-framework` · `../../buscador-normativos` | clones irmãos neste PC: origem das pastas do framework e de onde vêm os SHAs externos citados (`ab3fa66` = tag v0.1.0, `bc24c61`, `2221d74`: framework; `7f1c069`: buscador) |
 
 ## 7. Como atualizar
 Ao mudar de estado: §2/§5, `last_updated`, entrada no `log.md`, ledgers; snapshot de memória datado se mudou muito.

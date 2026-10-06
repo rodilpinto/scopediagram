@@ -1,6 +1,6 @@
 ---
 title: scopediagram TODOs (persistent, version-controlled)
-last_audit: 2026-10-05
+last_audit: 2026-10-06
 related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-scopediagram.md, ../BLOCKED-ON-RODRIGO.md, ../LESSONS.md]
 ---
 
