@@ -35,6 +35,8 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-scopediagram.md, ../BL
   `f2e55aa`, `55d87ea`, `2b912ea`, `5e9d1b7`; merge em `main` 2026-07-08 (D1/D2).
 
 ## P2 / P3 · Depois / nice-to-have
+- [ ] Recopiar `branding` e `tempo_economizado` **1.0.1** quando estiverem na `main`/tag do framework (hoje só em
+  `homologacao` de lá, `2221d74`, 06/10): só os testes mudaram (pulam sem Streamlit); nenhum efeito neste app.
 - [ ] **Rótulo "SUBPROCESSOS" quebrado** no slide 2 (o texto vertical quebra em 3 colunas e passa por cima dos itens):
   visto no render do PowerPoint da linha de base de 05/10, **antes** do passe (defeito antigo, não causado por ele).
 - [ ] `app.py` usa `use_container_width` (o Streamlit 1.64 avisa: trocar por `width="stretch"`/`"content"`).
