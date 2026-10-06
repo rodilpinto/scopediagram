@@ -1,15 +1,15 @@
 # LESSONS: scopediagram
 
 <!-- Append-only. Mais novas no topo. Formato: Problema / Causa-raiz / Conserto / Regra (+ Cobertura quando o
-     conserto é estrutural). Lições específicas do PPTX ficam em docs/SESSION-ONBOARD-pptx.md §3 e docs/log.md. -->
+     conserto é estrutural). Lições específicas do app ficam em docs/SESSION-ONBOARD-scopediagram.md §3 e docs/log.md. -->
 
 ## 2026-10-05 · Comparar PPTX gerados: pelos PNGs do PowerPoint, não pelos bytes
 
 **Problema.** Duas gerações do mesmo exemplo dão `.pptx` com bytes e tamanho diferentes (o zip não é determinístico),
 o que impede provar "nada mudou" por hash do arquivo.
 **Causa-raiz.** Metadados do zip variam a cada `to_bytes`; o conteúdo renderizado não.
-**Conserto.** Renderizar os dois com `python -m pptx_opc.render_powerpoint` e comparar os PNGs pixel a pixel
-(PIL `ImageChops.difference(...).getbbox() is None`). Duas gerações seguidas deram 5/5 iguais, então a comparação
+**Conserto.** Gerar com `tools/qa_gerar_exemplo.py`, renderizar com `python -m pptx_opc.render_powerpoint` e comparar
+os PNGs pixel a pixel com `tools/qa_compara_png.py` (PIL `ImageChops.difference(...).getbbox() is None`). Duas gerações seguidas deram 5/5 iguais, então a comparação
 não tem ruído (passe do framework, 05/10).
 **Regra.** QA de "mesmo resultado" no PPTX = PNGs do PowerPoint iguais, com uma dupla de controle antes.
 

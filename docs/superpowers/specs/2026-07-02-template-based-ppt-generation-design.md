@@ -4,6 +4,11 @@
 **Autor:** brainstorming assistido (Claude) + Rodrigo
 **Status:** aguardando revisão do humano
 
+> ⚠ **Nota de 06/10/2026:** este é o desenho original. A implementação real ficou em `templatefill/builder.py` e
+> `templatefill/igoe.py`, com o pacote OPC em `pptx_opc/` (veio do `nuati-framework`; antes era `templatefill/opc.py`).
+> Os módulos `igoe_slide.py`, `slide_unit.py`, `layout.py` e `tools/qa_render.py` citados abaixo não existem. QA de hoje:
+> `python -m pptx_opc.render_powerpoint` e `tools/qa_*.py`.
+
 ## Problema
 
 O gerador atual (`ppt.py`) constrói os slides **do zero** com retângulos e caixas
@@ -76,6 +81,8 @@ caixas conforme o conteúdo.
 ## Arquitetura de componentes
 
 Substitui o interior de `ppt.py`. Novo pacote `templatefill/`:
+
+> ⚠ Lista de módulos superada: ver a nota de 06/10/2026 no topo.
 
 - `opc.py` — pacote OPC em memória (zipfile + lxml): ler/gravar partes, adicionar/
   remover partes, gerir `_rels`, `[Content_Types].xml` e a ordem de `sldId` em

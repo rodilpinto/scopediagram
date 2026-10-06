@@ -1,8 +1,8 @@
 ---
-title: "Decisões abertas — ledger consolidado (PPTX)"
+title: "Decisões: ledger consolidado (scopediagram)"
 maintained_by: Claude Code sessions; só Rodrigo resolve
 last_updated: 2026-10-05
-related: [_TODO.md, SESSION-ONBOARD-pptx.md, log.md]
+related: [_TODO.md, SESSION-ONBOARD-scopediagram.md, log.md]
 ---
 
 # Decisões abertas — o que precisa da chamada do humano
@@ -62,7 +62,7 @@ e verificado:
   opcional pelo schema mas corrigido por segurança) — corrigido e commitado.
 - QA visual (LibreOffice→PDF→PNG) confirma zero mudança no render (esta feature só
   toca o modelo de dados).
-- ⚠ **Superado em 2026-07-13:** o PowerPoint real ESTÁ instalado nesta máquina e a validação foi feita com sucesso via COM (ver `SESSION-ONBOARD-pptx.md` §3 e `LESSONS.md`). Texto original, mantido como histórico: **Limite conhecido, não coberto por esta decisão:** a validação real de "abrir no
+- ⚠ **Superado em 2026-07-13:** o PowerPoint real ESTÁ instalado nesta máquina e a validação foi feita com sucesso via COM (ver `SESSION-ONBOARD-scopediagram.md` §3 e `LESSONS.md`). Texto original, mantido como histórico: **Limite conhecido, não coberto por esta decisão:** a validação real de "abrir no
   PowerPoint de verdade, editar um item do SmartArt, e o resultado continuar
   consistente" não pôde ser testada nesta máquina (sem PowerPoint instalado;
   LibreOffice não recalcula SmartArt a partir do modelo de dados). Isso é do usuário
@@ -125,13 +125,13 @@ entregue com os endereços certos.
 ## Decisões de outro repo que valem para este app (eco; a fonte manda)
 
 Fonte: `github.com/rodilpinto/buscador-normativos`, arquivo `_DECISOES-PENDENTES.md`, seção
-"Decididas em 2026-09-29" (ler com `git -C ../buscador-normativos show origin/master:_DECISOES-PENDENTES.md`).
+"Decididas em 2026-09-29" (ler com `git -C ../buscador-normativos show origin/main:_DECISOES-PENDENTES.md`; o buscador não tem mais `master`).
 Todas 🟢 decididas pelo Rodrigo em 29/09; aqui só o que cada uma bloqueia neste app.
 - **D-C22 · dois ambientes:** `main` = estável/produção (+ espelho no servidor do Nuati), `homologacao` = playground.
-  Bloqueia: criar `homologacao`, recriar os apps no Streamlit (não dá para trocar a branch de um app), apagar
-  `feat/llm-cadeia`. Tudo isso acontece **só** no passe da D-C23. A proposta `deploy`/`main` desta sessão (29/09)
-  foi superada e não executada.
-- **D-C23 · framework central** `rodilpinto/nuati-framework` = origem única do que é comum. Bloqueia: o passe único
-  deste app (adotar o framework + migrar os ambientes). Candidatos daqui ao framework: `log.md` 29/09.
-- **D-C24 · `llm_cadeia/` congelada.** Não editar a cópia; defeito vira pedido à sessão do framework.
+  ✅ Cumprida no passe (05-06/10): `main` e `homologacao` criadas, apps recriados (D5, D6, D7).
+- **D-C23 · framework central** `rodilpinto/nuati-framework` = origem única do que é comum. ✅ Passe feito (D5).
+- **D-C24 · `llm_cadeia/` congelada.** ✅ Encerrada: a pasta agora vem do framework (1.1.0); vale a regra de sincronia
+  do framework (não editar a cópia; defeito vira pedido ao framework).
+- Decisões do próprio framework que valem aqui: `DECISOES.md` do `nuati-framework` (ex.: F-A10, F-A14), lido com
+  `git -C <clone do framework> show origin/homologacao:DECISOES.md | grep -n -i scopediagram` (situação em 06/10).
 

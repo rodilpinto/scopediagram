@@ -1,4 +1,18 @@
-# PPTX — log (append-only, mais novo no topo)
+# scopediagram · log (append-only, mais novo no topo)
+
+## [2026-10-06] checkpoint | Fim do passe do framework; área renomeada `pptx` → `scopediagram`
+
+- A pedido do Rodrigo, a área passa a se chamar `scopediagram`: `docs/SESSION-ONBOARD-pptx.md` →
+  `docs/SESSION-ONBOARD-scopediagram.md` e `/onboard-pptx` → `/onboard-scopediagram` (referências trocadas fora do
+  histórico; entradas antigas deste log mantêm os nomes da época).
+- Relatório do passe entregue ao Rodrigo para a sessão do framework (resumo nas entradas de 05-06/10 abaixo).
+- Scripts de QA versionados em `tools/` (`qa_gerar_exemplo.py`, `qa_compara_png.py`, `qa_extracao_real.py`), com a
+  receita no docstring: são os que produziram a comparação de PNGs e a extração real citadas abaixo.
+- README do app atualizado (pastas do framework, ambientes `main`/`homologacao`, promoção, arquitetura com SmartArt);
+  D-C24 marcada como encerrada; eco do buscador passa a ler `origin/main`.
+- Snapshot de memória `scopediagram_state_2026-10-06.md`.
+
+---
 
 ## [2026-10-06] release | v1.1.0: framework na produção + versão do app no rodapé
 

@@ -1,6 +1,6 @@
-# Onboard: scopediagram (área `pptx`, cobre o app inteiro)
+# Onboard: scopediagram (área `scopediagram`, cobre o app inteiro)
 
-**Uso**: `/onboard-pptx`
+**Uso**: `/onboard-scopediagram`
 
 Carrega o contexto do projeto para uma sessão nova. **LÊ e RESUME; não começa trabalho sozinho.**
 Este arquivo guarda só procedimento e ponteiros; fatos de estado moram nos arquivos abaixo.
@@ -10,7 +10,7 @@ Este arquivo guarda só procedimento e ponteiros; fatos de estado moram nos arqu
 ## O que fazer
 Leia nesta ordem:
 
-1. `docs/SESSION-ONBOARD-pptx.md` inteiro (entry point; §2 estado, §5 próximo movimento).
+1. `docs/SESSION-ONBOARD-scopediagram.md` inteiro (entry point; §2 estado, §5 próximo movimento).
 2. `BLOCKED-ON-RODRIGO.md` (raiz): ações que só o Rodrigo pode fazer.
 3. `docs/_TODO.md` (P0/P1) e `docs/_DECISOES-PENDENTES.md` (inclui o eco das decisões do buscador que valem aqui).
 4. `LESSONS.md` (raiz): skim.
@@ -19,7 +19,8 @@ Leia nesta ordem:
    `~/.claude/projects/<pasta-do-projeto>/memory/MEMORY.md`.
 7. Git: `git log --oneline -3`, `git status --short -b`, `git branch -a`.
 
-Se a tarefa envolver o LLM: `llm_cadeia/README.md` (a pasta é congelada; ver as decisões).
+Pastas do `nuati-framework` (`llm_cadeia/`, `pptx_opc/`, `tempo_economizado/`, `branding/`): não editar; leia o
+README da pasta envolvida na tarefa. Defeito ou melhoria vira pedido ao framework.
 Se envolver o PPTX: `docs/superpowers/specs/2026-07-02-template-based-ppt-generation-design.md`.
 
 ---
@@ -36,7 +37,7 @@ Não: editar arquivos · commitar · explorar além dos docs acima antes de rece
 ---
 
 ## Verificações rápidas úteis
-- Testes: `py -3.13 -m pytest tests -q` e `py -3.13 -m pytest llm_cadeia/test_llm_cadeia.py -q`
+- Testes: `py -3.13 -m pytest tests llm_cadeia pptx_opc tempo_economizado branding -q`
   (use o launcher `py`; o `python` do PATH é o atalho da Microsoft Store).
 - App local: `py -3.13 -m streamlit run app.py --server.port 8531` (8502 pode estar com o app de Checklist).
 - LLM ao vivo (só na rede da Câmara): `py -3.13 -m llm_cadeia` com os segredos de `~/.streamlit/secrets.toml`.
@@ -45,7 +46,8 @@ Não: editar arquivos · commitar · explorar além dos docs acima antes de rece
 ## Follow-ups comuns
 | Pedido | Ler também | Então |
 |---|---|---|
-| "vamos fazer o passe do framework" | decisões D-C22/23/24 (eco em `_DECISOES-PENDENTES.md`) | seguir a receita do README do framework; checkpoint |
+| "promove para produção" | state file §2 (receita de promoção) | só com ok do Rodrigo: `VERSAO_APP` + tag igual; conferir os dois apps no ar; checkpoint |
+| "recopia o recurso X do framework" | README do recurso no framework; registro §4 de lá | comparar por hash git, `git archive` da tag, testes, commit "adota ..."; atualizar o registro |
 | "o LLM falhou" | `llm_cadeia/README.md` (esperas, segredos) | diagnosticar; defeito no módulo → pedido ao framework, não editar |
 | "corrige overflow das bandas" | `templatefill/igoe.py` | replicar o auto-fit das lanes; render via PowerPoint; checkpoint |
 | "o app quebrou" | traceback; `app.py`, `llm.py`, `templatefill/` | `superpowers:systematic-debugging`; checkpoint |

@@ -12,10 +12,12 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 - 🟡 **Existe app de teste antigo do scopediagram?** Se sim, apagar só depois do ok final.
 - 🟢 **Chave OpenAI para verificar ao vivo** a repetição com `max_completion_tokens` (modelos de raciocínio via
   "Usar minha própria chave" › Outro). Hoje só há teste com dublê. Destrava: tirar o ⚠ do README do `llm_cadeia`
-  (pedido vai para a sessão do framework, D-C24).
+  (pedido vai para o `nuati-framework`).
 
 ## Feitos
 
+- 2026-10-06 · Autorizou o snapshot de memória do checkpoint (`scopediagram_state_2026-10-06.md`) e a troca do nome da área
+  (`pptx` → `scopediagram`).
 - 2026-10-06 · Autorizou a promoção (`v1.1.0`) e pediu a versão do app no rodapé de todos os apps (D7, F-A14).
 - 2026-10-06 · Recriou a produção (`diagrama-escopo`, `main`) e criou a homologação
   (`diagrama-escopo-homologacao`, `homologacao`), com os Secrets e Reboot.

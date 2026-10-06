@@ -7,8 +7,8 @@ related: [_TODO.md, _DECISOES-PENDENTES.md, log.md, ../BLOCKED-ON-RODRIGO.md, ..
 
 # scopediagram: session onboarding
 
-Ponto de entrada único (a área `pptx` cobre o app inteiro). ≤ 1 página. Histórico em `log.md`; tarefas em
-`_TODO.md`; decisões em `_DECISOES-PENDENTES.md`; ações só-humano em `../BLOCKED-ON-RODRIGO.md`; lições em
+Ponto de entrada único (área `scopediagram`, que cobre o app inteiro; chamava-se `pptx` até 06/10). ≤ 1 página.
+Histórico em `log.md`; tarefas em `_TODO.md`; decisões em `_DECISOES-PENDENTES.md`; ações só-humano em `../BLOCKED-ON-RODRIGO.md`; lições em
 `../LESSONS.md`.
 
 ## 1. O que é (30s)
@@ -29,6 +29,10 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
 - **Retorno:** tags anotadas `pre-framework-2026-10-05-main` e `pre-framework-2026-10-05-feat-llm-cadeia`; voltar a
   `main` por `git revert`, nunca por push forçado.
 - **Working tree:** arquivos não rastreados do usuário (2 `.pptx` na raiz e `.claude/settings.local.json`), intocados.
+- **Cadeia desta sessão (05-06/10, em `homologacao`):** `de34e02` (merge) → `28386b1` → `514d71c` → `22ee8e5` →
+  `e4278bc` → `67beb1b` → `a4acec5` (= `main` = `v1.1.0`) → commits de journal e o do checkpoint. ⚠ O SHA mais novo
+  listado aqui está sempre um ou mais atrás dos commits que gravaram este arquivo: a cadeia real termina em
+  `git log --oneline -3`.
 
 ## 3. Achados críticos (não perder)
 - Pastas do framework (`llm_cadeia/`, `pptx_opc/`, `tempo_economizado/`, `branding/`): não editar; defeito vira
@@ -36,14 +40,15 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
   O que é do app fica fora delas: etapas do tempo economizado em `economia.py`, tema em `.streamlit/config.toml`.
 - Da rede da Câmara (PC do trabalho, 28/09) os 4 serviços externos passaram: Gemini, Groq, Cerebras, OpenRouter. O Gemma (servidor local, `LLM_BASE_URL`) só é alcançável daqui;
   no Cloud, sem `LLM_BASE_URL`.
-- Testes locais: `py -3.13 -m pytest tests -q` e `py -3.13 -m pytest llm_cadeia/test_llm_cadeia.py -q` (o `python`
-  do PATH é o atalho da Store; use o launcher `py`). Segredos locais em `~/.streamlit/secrets.toml` (fora do repo).
+- Testes locais: `py -3.13 -m pytest tests llm_cadeia pptx_opc tempo_economizado branding -q` (o `python` do PATH
+  é o atalho da Store; use o launcher `py`). O render do `pptx_opc` só roda com `NUATI_TESTE_POWERPOINT=1`. Segredos locais em `~/.streamlit/secrets.toml` (fora do repo).
 - Porta 8502 pode estar ocupada pelo app de Checklist; suba o scopediagram em outra (`--server.port 8531`).
 - PPTX: template é **SmartArt**; `python-pptx` não o edita → `templatefill/` mexe no XML (zip + lxml). O LibreOffice
   **não** regenera SmartArt; o `drawingN.xml` em cache é obrigatório. Cada lane = 1 `dsp:sp` com N parágrafos; no
   `data*.xml` cada item é um `dgm:pt` (D3). Lanes são achadas **por texto**, nunca por ordem.
-- QA visual fiel: PowerPoint real via COM, `py -3.13 -m pptx_opc.render_powerpoint <pptx> <pasta>`; aproximação: LibreOffice → PDF →
-  PyMuPDF.
+- QA visual fiel: PowerPoint real via COM, `py -3.13 -m pptx_opc.render_powerpoint <pptx> <pasta>` (precisa de
+  `pywin32`, fora do `requirements.txt`). Antes/depois: `tools/qa_gerar_exemplo.py` + render + `tools/qa_compara_png.py`
+  (prova por PNG, não por bytes: `LESSONS.md` 05/10). Extração real: `tools/qa_extracao_real.py`.
 
 ## 4. Disciplina
 Um chunk por vez → verificar → atualizar durables → commit → `/checkpoint`. Trabalho em `homologacao`; push na `main` só com ok do
@@ -56,13 +61,14 @@ Rodrigo (promoção).
 ## 6. Ponteiros
 | Doc | Propósito |
 |---|---|
-| `_TODO.md` · `_DECISOES-PENDENTES.md` · `log.md` | tarefas · decisões (+ eco D-C22/23/24) · timeline |
+| `_TODO.md` · `_DECISOES-PENDENTES.md` · `log.md` | tarefas · decisões (D5-D7 do passe; eco D-C22/23/24, cumpridas) · timeline |
 | `../BLOCKED-ON-RODRIGO.md` · `../LESSONS.md` | ações só-humano · lições transversais |
 | `../llm_cadeia/README.md` | módulo de LLM (uso, segredos, changelog) |
 | `../.streamlit/secrets.toml.example` | nomes dos segredos (sem valores) |
 | `superpowers/specs/2026-07-02-template-based-ppt-generation-design.md` | arquitetura do PPTX |
 | `superpowers/specs/2026-07-08-smartart-data-model-editability-design.md` | editabilidade do SmartArt (D3) |
 | `../templatefill/{igoe,builder}.py` · `../pptx_opc/` (OPC + render, do framework) | motor PPTX · QA via PowerPoint |
+| `../economia.py` · `../tools/qa_*.py` | etapas do tempo economizado · scripts de QA (receita no docstring) |
 
 ## 7. Como atualizar
 Ao mudar de estado: §2/§5, `last_updated`, entrada no `log.md`, ledgers; snapshot de memória datado se mudou muito.

@@ -1,12 +1,12 @@
 ---
-title: PPTX TODOs (persistent, version-controlled)
+title: scopediagram TODOs (persistent, version-controlled)
 last_audit: 2026-10-05
-related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON-RODRIGO.md, ../LESSONS.md]
+related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-scopediagram.md, ../BLOCKED-ON-RODRIGO.md, ../LESSONS.md]
 ---
 
-# PPTX TODOs: o que está pendente e onde
+# scopediagram TODOs: o que está pendente e onde
 
-> Companion snapshot: `~/.claude/projects/<pasta-do-projeto>/memory/pptx_state_2026-09-29.md`.
+> Companion snapshot: `~/.claude/projects/<pasta-do-projeto>/memory/scopediagram_state_2026-10-06.md` (só nas máquinas do Rodrigo).
 > Ações que só o Rodrigo pode fazer: `../BLOCKED-ON-RODRIGO.md` (não duplicadas aqui).
 
 ## P0 · Passe do framework (D5/D7): falta só a limpeza
@@ -39,7 +39,7 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON
   visto no render do PowerPoint da linha de base de 05/10, **antes** do passe (defeito antigo, não causado por ele).
 - [ ] `app.py` usa `use_container_width` (o Streamlit 1.64 avisa: trocar por `width="stretch"`/`"content"`).
 - [ ] Verificar ao vivo a OpenAI paga via "Outro" (hoje só dublê): depende de chave (ver `BLOCKED-ON-RODRIGO.md`);
-  resultado vai para a sessão do framework (D-C24).
+  resultado vai para o `nuati-framework`.
 - [ ] **Auto-fit nas BANDAS** (REGULADORES/RECURSOS/OBJETIVO): hoje só as lanes têm. Reavaliar se aparecer overflow.
 - [ ] Refinar o conteúdo LGPD de exemplo (`exemplo_auditoria_lgpd_PROPOSTA-nao-validada.pptx`, proposta não
   validada; **ignorado pelo git** por `.gitignore` `exemplo_*.pptx`, existe só nesta máquina): só se o Rodrigo quiser um deck de demonstração fiel.
