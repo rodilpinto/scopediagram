@@ -1,5 +1,24 @@
 # PPTX — log (append-only, mais novo no topo)
 
+## [2026-10-06] verificação | Apps recriados no Streamlit e conferidos no ar
+
+O Rodrigo recriou os apps (06/10): produção **`diagrama-escopo.streamlit.app`** (branch `main`) e homologação
+**`diagrama-escopo-homologacao.streamlit.app`** (branch `homologacao`). ⚠ A URL da produção **mudou**: a antiga
+`diagramadeescopo.streamlit.app` agora responde "You do not have access to this app or it does not exist".
+Conferido no ar com o mesmo texto curto (liquidação de nota fiscal) nos dois:
+- **Produção = antes:** título antigo, cadeia na barra lateral (gemini, gemini-2, groq-2, cerebras-2, openrouter-2),
+  "Última resposta: gemini (gemini-3.5-flash-lite)", "Baixar PowerPoint", "Feito por Rodrigo Pinto", "Versão 1.0",
+  "Economia estimada: 4.0 horas" e o toggle antigo. Igual ao registro de antes da recriação.
+- **Homologação:** `llm_cadeia` 1.1.0 (cadeia na barra lateral; "Última resposta" e "Extraído por: gemini
+  (gemini-3.5-flash-lite)"); `pptx_opc` (PPTX baixado, 1,6 MB, aberto no PowerPoint via `pptx_opc.render_powerpoint`,
+  2 slides); `tempo_economizado` ("cerca de 4h01min" = os mesmos 4,0 h da produção; dropdown "Como chegamos a esse
+  número?" com a tabela); `branding` (título da aba "… | Câmara dos Deputados", cabeçalho com o logo, logo no rodapé
+  sem assinatura de unidade).
+- Com esse texto curto o Gemini não achou subprocessos (lane "— (não identificado no documento)"): resposta do modelo,
+  igual nos dois ambientes pela mesma contagem; não é efeito do passe.
+
+---
+
 ## [2026-10-06] verificação | Produção antes da recriação (`diagramadeescopo.streamlit.app`)
 
 URL da produção informada pelo Rodrigo (06/10). Visto no ar, antes do passo do Streamlit: barra lateral com a cadeia
