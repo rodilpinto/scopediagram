@@ -5,21 +5,19 @@ Feitos vão para o fim, com data. 🔴 urgente · 🟡 importante · 🟢 quando
 
 ## Abertos
 
-- 🟡 **D6: branch que `diagramadeescopo.streamlit.app` segue e se há app de teste** (URL informada em 06/10).
-  Não trava o passo abaixo: a produção será recriada na `main` de qualquer forma.
-- 🔴 **Passo do Streamlit do passe do framework** (receita §3, passo 5, do `nuati-framework`), depois da D6:
-  1. no app de produção, copiar o texto dos Secrets (guardar fora do navegador);
-  2. apagar o app de produção (`diagramadeescopo`) e recriá-lo com a **mesma URL** na branch `main` (se não aparecer na lista, digitar);
-     colar os Secrets e clicar **Reboot app**;
-  3. criar o app de homologação (sugestão: `diagramadeescopo-homologacao`) na branch `homologacao`; colar os mesmos
-     Secrets e **Reboot app**;
-  4. avisar a sessão para a conferência no ar. Apps de teste antigos só são apagados depois do ok com os dois no ar.
+- 🔴 **Ok para promover `homologacao` → `main`** (passo 9), depois de ver os dois apps no ar (log 06/10). Junto:
+  o nome da tag de versão do app e se o rodapé passa a mostrar essa versão.
+- 🟡 **URL antiga `diagramadeescopo.streamlit.app` deixou de existir** (06/10): links já divulgados quebram. Avisar
+  quem usa, ou criar um app nessa URL (Streamlit não redireciona).
+- 🟡 **Existe app de teste antigo do scopediagram?** Se sim, apagar só depois do ok final.
 - 🟢 **Chave OpenAI para verificar ao vivo** a repetição com `max_completion_tokens` (modelos de raciocínio via
   "Usar minha própria chave" › Outro). Hoje só há teste com dublê. Destrava: tirar o ⚠ do README do `llm_cadeia`
   (pedido vai para a sessão do framework, D-C24).
 
 ## Feitos
 
+- 2026-10-06 · Recriou a produção (`diagrama-escopo`, `main`) e criou a homologação
+  (`diagrama-escopo-homologacao`, `homologacao`), com os Secrets e Reboot.
 - 2026-10-05 · Decidiu o passe do framework (D5): mapeamento de branches, rodapé só com a marca, sem
   `extracao_texto`, dado interno fora dos arquivos versionados. As 2 pendências antigas de Cloud (conferir a branch;
   Secrets + teste no ar) viraram a D6 e o passo do Streamlit acima.

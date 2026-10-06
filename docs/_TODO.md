@@ -12,9 +12,8 @@ related: [_DECISOES-PENDENTES.md, log.md, SESSION-ONBOARD-pptx.md, ../BLOCKED-ON
 ## P0 · Passe do framework (D5): falta o Streamlit e a conferência no ar
 - [x] Tags de volta, linha de base, `homologacao` com `llm_cadeia` 1.1.0, `pptx_opc`, `tempo_economizado`, `branding`
   e dado interno fora dos arquivos versionados (log 05/10).
-- [ ] D6: URL do app de produção, branch que ele segue e se há app de teste (Rodrigo).
-- [ ] Rodrigo: passo do Streamlit (`BLOCKED-ON-RODRIGO.md`).
-- [ ] Conferir no ar, feature por feature: produção igual a antes; homologação com cadeia na barra lateral,
+- [x] D6 e passo do Streamlit (Rodrigo, 06/10): `diagrama-escopo` (`main`) e `diagrama-escopo-homologacao`.
+- [x] Conferir no ar, feature por feature: produção igual a antes; homologação com cadeia na barra lateral,
   extração, PPTX baixando e abrindo, tempo economizado, branding.
 - [ ] Com o ok: promover `homologacao` → `main` (fast-forward) com tag de versão do app; push nos dois remotos.
 - [ ] Com novo ok: `main` padrão no GitHub; apagar `feat/llm-cadeia` (e apps de teste antigos, se houver).

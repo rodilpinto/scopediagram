@@ -22,8 +22,9 @@ compartilhado `llm_cadeia/` (cadeia local Gemma → Gemini → Groq → Cerebras
 (Rodrigo), a conferência no ar, a promoção para `main` e a limpeza.
 - **`homologacao` = `67beb1b`** nos dois remotos: `main` + merge de `feat/llm-cadeia` + `llm_cadeia` 1.1.0,
   `pptx_opc` 1.0.0, `tempo_economizado` 1.0.0, `branding` 1.0.0 (pastas com a árvore git idêntica à v0.1.0) + dado
-  interno fora dos arquivos versionados. Conferida no app local (log 05/10), **ainda não no ar**.
-- **`main` = `0b5aee1`** (produção, sem o framework). URL do app de produção: **pendente (D6)**.
+  interno fora dos arquivos versionados. Conferida no app local (05/10) e no ar (06/10).
+- **`main` = `0b5aee1`** (produção, sem o framework): `diagrama-escopo.streamlit.app`. Homologação:
+  `diagrama-escopo-homologacao.streamlit.app`. Os dois conferidos no ar em 06/10 (log).
 - `feat/llm-cadeia` = `265f48a`: fica até o ok do Rodrigo com os dois apps no ar (depois, apagar).
 - **Retorno:** tags anotadas `pre-framework-2026-10-05-main` e `pre-framework-2026-10-05-feat-llm-cadeia` (e a
   antiga `pre-llm-cadeia`).
@@ -50,7 +51,7 @@ Um chunk por vez → verificar → atualizar durables → commit → `/checkpoin
 Rodrigo (promoção).
 
 ## 5. Próximo movimento (recomendação)
-1. D6 (URL do app de produção) e o passo do Streamlit, ambos em `../BLOCKED-ON-RODRIGO.md`.
+1. Ok do Rodrigo para a promoção (`../BLOCKED-ON-RODRIGO.md`).
 2. Conferir os dois apps no ar e seguir o P0 de `_TODO.md` (promoção, limpeza, registro no framework).
 
 ## 6. Ponteiros
