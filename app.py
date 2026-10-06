@@ -15,6 +15,9 @@ from tempo_economizado import estimar
 from tempo_economizado.painel_streamlit import mostrar_tempo_economizado
 
 
+# Versão do app: igual à tag da promoção para a main (git tag -a vX.Y.Z). Atualize as duas juntas.
+VERSAO_APP = "1.1.0"
+
 cd_brand.configurar_pagina("Gerador de Diagramas de Escopo")
 
 
@@ -22,11 +25,6 @@ def _render_efficiency_footer(scope: ScopeDiagram) -> None:
     st.markdown("---")
     # Sem tempo da ferramenta (automatico_min=0): mesmo número da conta antiga do app.
     mostrar_tempo_economizado(estimar(etapas_manuais(scope)))
-    col1, col2 = st.columns(2)
-    with col1:
-        st.caption("Feito por Rodrigo Pinto")
-    with col2:
-        st.caption("Versão 1.0")
 
 
 def _split_lines(text: str) -> list[str]:
@@ -306,5 +304,7 @@ with aba_gerador:
 with aba_documentacao:
     render_documentacao()
 
+# Sempre visível (não só depois de gerar): autoria e versão do app.
+st.caption(f"Feito por Rodrigo Pinto · Versão {VERSAO_APP}")
 # App público: só a marca, sem assinatura de unidade (MIV p.14; F-A10 do framework).
 cd_brand.rodape(unidades=())
